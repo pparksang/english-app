@@ -1,0 +1,2001 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="영어공부">
+<meta name="theme-color" content="#0a0a0f">
+<title>영어공부 — 통합 학습앱</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=DM+Serif+Display:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:      #0a0a0f;
+  --bg2:     #12121a;
+  --bg3:     #1a1a24;
+  --bg4:     #22222e;
+  --border:  rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.13);
+  --text:    #f0ece8;
+  --text2:   #9a9098;
+  --text3:   #504858;
+  --gold:    #e8c97a;
+  --gold2:   #c4a54e;
+  --cyan:    #00e5ff;
+  --pink:    #ff6eb4;
+  --green:   #6fcf97;
+  --purple:  #a78bfa;
+  --red:     #eb5757;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{
+  height:100%;
+  margin:0;padding:0;
+  overscroll-behavior:none;
+}
+body{
+  font-family:'Noto Sans KR',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  overflow:hidden;
+  height:100dvh;
+}
+
+/* ══════════ LAYOUT ══════════ */
+#app{
+  display:flex;
+  flex-direction:column;
+  height:100dvh;
+  max-width:480px;
+  margin:0 auto;
+  width:100%;
+  position:relative;
+}
+.page{
+  display:none;
+  flex:1;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior-y:contain;
+  position:relative;
+  min-height:0;
+}
+.page.active{display:flex;flex-direction:column}
+
+/* ══════════ BOTTOM NAV ══════════ */
+.bottom-nav{
+  display:flex;
+  background:var(--bg2);
+  border-top:1px solid var(--border);
+  padding-bottom:max(8px, env(safe-area-inset-bottom));
+  flex-shrink:0;
+  position:relative;
+  z-index:200;
+  width:100%;
+}
+.nav-tab{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:10px 4px 6px;
+  cursor:pointer;
+  border:none;
+  background:none;
+  color:var(--text3);
+  font-family:'Noto Sans KR',sans-serif;
+  transition:color 0.15s;
+  gap:4px;
+  min-height:56px;
+  -webkit-appearance:none;
+  appearance:none;
+  touch-action:manipulation;
+}
+.nav-tab.active{color:var(--gold)}
+.nav-tab .tab-icon{font-size:20px;line-height:1;pointer-events:none}
+.nav-tab .tab-label{font-size:9px;font-weight:600;letter-spacing:0.04em;line-height:1;pointer-events:none}
+
+/* ══════════ HOME PAGE ══════════ */
+.home-page{padding:0 0 16px}
+.home-hero{
+  background:linear-gradient(160deg,#1a1020 0%,#0e1828 50%,#0a120a 100%);
+  padding:52px 24px 28px;
+  position:relative;
+  overflow:hidden;
+}
+.home-hero::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 70% 50% at 30% 30%,rgba(232,201,122,0.08) 0%,transparent 60%),
+             radial-gradient(ellipse 50% 40% at 80% 70%,rgba(0,229,255,0.05) 0%,transparent 60%);
+}
+.hero-eyebrow{font-size:10px;letter-spacing:0.2em;color:var(--gold2);text-transform:uppercase;margin-bottom:6px;position:relative}
+.hero-title{font-family:'DM Serif Display',serif;font-size:32px;color:var(--text);line-height:1.15;position:relative;margin-bottom:4px}
+.hero-title span{color:var(--gold)}
+.hero-sub{font-size:12px;color:var(--text3);position:relative}
+
+.streak-bar{
+  display:flex;gap:8px;padding:16px 20px;
+  background:var(--bg2);border-bottom:1px solid var(--border);
+}
+.streak-pill{
+  flex:1;background:var(--bg3);border:1px solid var(--border);
+  border-radius:12px;padding:12px 10px;text-align:center;
+}
+.streak-pill .sp-num{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:700;line-height:1}
+.streak-pill .sp-lbl{font-size:10px;color:var(--text3);margin-top:3px}
+.streak-pill.gold .sp-num{color:var(--gold)}
+.streak-pill.cyan .sp-num{color:var(--cyan)}
+.streak-pill.green .sp-num{color:var(--green)}
+.streak-pill.purple .sp-num{color:var(--purple)}
+
+.section-title{
+  font-size:11px;letter-spacing:0.12em;text-transform:uppercase;
+  color:var(--text3);padding:20px 20px 10px;
+}
+
+/* Today's plan */
+.today-plan{padding:0 16px;display:flex;flex-direction:column;gap:10px;margin-bottom:4px}
+.plan-card{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:16px;padding:16px 18px;
+  display:flex;align-items:center;gap:14px;
+  cursor:pointer;transition:border-color 0.2s,background 0.2s;
+  position:relative;overflow:hidden;
+  touch-action:manipulation;
+  -webkit-user-select:none;user-select:none;
+}
+.plan-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:3px}
+.plan-card.gold-accent::before{background:var(--gold)}
+.plan-card.cyan-accent::before{background:var(--cyan)}
+.plan-card.green-accent::before{background:var(--green)}
+.plan-card.purple-accent::before{background:var(--purple)}
+.plan-card:active{background:var(--bg3)}
+.plan-icon{font-size:28px;flex-shrink:0;width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:var(--bg3);border-radius:12px}
+.plan-body{flex:1;min-width:0}
+.plan-name{font-size:14px;font-weight:700;color:var(--text);margin-bottom:2px}
+.plan-desc{font-size:12px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.plan-progress{
+  display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;
+}
+.plan-pct{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text3)}
+.plan-pbar{width:48px;height:3px;background:var(--bg4);border-radius:2px;overflow:hidden}
+.plan-pfill{height:100%;border-radius:2px;transition:width 0.4s}
+
+/* tip banner */
+.tip-banner{
+  margin:8px 16px 0;padding:14px 16px;
+  background:rgba(232,201,122,0.06);border:1px solid rgba(232,201,122,0.15);
+  border-radius:14px;font-size:12px;line-height:1.6;color:var(--text2);
+}
+.tip-banner strong{color:var(--gold)}
+
+/* ══════════ SHARED INNER PAGE ══════════ */
+.inner-header{
+  display:flex;align-items:center;gap:12px;
+  padding:14px 16px;
+  background:var(--bg);
+  border-bottom:1px solid var(--border);
+  position:sticky;top:0;z-index:50;
+  flex-shrink:0;
+}
+.back-btn{
+  width:44px;height:44px;border-radius:10px;
+  background:var(--bg3);border:1px solid var(--border);
+  color:var(--text2);font-size:18px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  touch-action:manipulation;-webkit-appearance:none;
+}
+.inner-title{font-size:15px;font-weight:700;flex:1}
+.inner-badge{
+  font-size:10px;padding:4px 9px;border-radius:99px;
+  background:rgba(232,201,122,0.1);color:var(--gold2);
+  border:1px solid rgba(232,201,122,0.2);letter-spacing:0.05em;
+}
+
+/* ══════════ 결론부터 / 마우스댄스 SIDEBAR-STYLE ══════════ */
+.chapter-list-scroll{flex:1;overflow-y:auto;padding:12px 16px 24px}
+.ch-grid{display:flex;flex-direction:column;gap:8px}
+.ch-card{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:14px;padding:14px 16px;
+  display:flex;align-items:center;gap:12px;
+  cursor:pointer;transition:border-color 0.15s,background 0.15s;
+  touch-action:manipulation;
+  -webkit-user-select:none;user-select:none;
+}
+.ch-card:active{background:var(--bg3)}
+.ch-card.done{border-color:rgba(111,207,151,0.25)}
+.ch-label{
+  font-family:'JetBrains Mono',monospace;font-size:10px;
+  color:var(--text3);background:var(--bg3);
+  padding:3px 8px;border-radius:6px;flex-shrink:0;min-width:44px;text-align:center;
+}
+.ch-info{flex:1;min-width:0}
+.ch-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:2px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ch-sub{font-size:11px;color:var(--text3)}
+.ch-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0}
+.ch-pct{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3)}
+.ch-pbar{width:40px;height:3px;background:var(--bg4);border-radius:2px;overflow:hidden}
+.ch-pfill{height:100%;border-radius:2px;background:var(--gold)}
+.ch-done-badge{font-size:10px;color:var(--green)}
+
+/* Chapter study view */
+.study-view{display:flex;flex-direction:column;flex:1;overflow:hidden}
+.mode-bar{
+  display:flex;gap:6px;padding:10px 16px;
+  background:var(--bg);border-bottom:1px solid var(--border);flex-shrink:0;
+}
+.mode-pill{
+  padding:8px 14px;border-radius:99px;font-size:12px;font-weight:600;
+  border:1px solid var(--border2);background:transparent;
+  color:var(--text2);cursor:pointer;font-family:'Noto Sans KR',sans-serif;
+  transition:all 0.15s;flex:1;
+  touch-action:manipulation;-webkit-appearance:none;min-height:40px;
+}
+.mode-pill.active{background:var(--gold);border-color:var(--gold);color:#1a1200;font-weight:700}
+.study-body{flex:1;overflow-y:auto;padding:16px;-webkit-overflow-scrolling:touch}
+
+/* Flash Card */
+.flash-scene{perspective:1000px;margin-bottom:16px}
+.flash-inner{
+  position:relative;width:100%;
+  background:var(--bg2);border:1px solid var(--border2);
+  border-radius:18px;padding:32px 24px;
+  min-height:200px;display:flex;flex-direction:column;
+  justify-content:center;
+  box-shadow:0 4px 24px rgba(0,0,0,0.3);
+  cursor:pointer;transition:border-color 0.2s;
+}
+.flash-inner::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--gold),transparent);
+  border-radius:18px 18px 0 0;
+}
+.flash-inner.revealed{border-color:rgba(111,207,151,0.3)}
+.flash-counter{
+  position:absolute;top:14px;right:16px;
+  font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3);
+}
+.flash-bm{
+  position:absolute;top:14px;left:16px;
+  background:none;border:none;cursor:pointer;font-size:16px;color:var(--text3);
+}
+.flash-bm.active{color:var(--gold)}
+.flash-kr{
+  font-size:18px;font-weight:600;line-height:1.6;color:var(--text);
+  margin-top:8px;
+}
+.flash-kr .key{color:var(--gold);font-weight:700}
+.flash-en-wrap{
+  margin-top:20px;padding-top:20px;
+  border-top:1px solid var(--border);
+}
+.flash-en{
+  font-family:'DM Serif Display',serif;
+  font-size:16px;line-height:1.65;color:var(--text2);
+}
+.flash-en .key{color:var(--cyan)}
+.flash-reveal-btn{
+  margin-top:16px;padding:14px 24px;
+  border:1px solid var(--border2);background:transparent;
+  color:var(--text2);border-radius:10px;
+  font-family:'Noto Sans KR',sans-serif;font-size:14px;cursor:pointer;
+  align-self:flex-start;transition:all 0.15s;
+  touch-action:manipulation;-webkit-appearance:none;min-height:48px;
+}
+.flash-reveal-btn:active{background:var(--bg4)}
+.card-nav{display:flex;gap:10px;align-items:center;margin-top:0}
+.cnav-btn{
+  padding:14px 20px;border-radius:12px;
+  border:1px solid var(--border2);background:var(--bg2);
+  color:var(--text);font-size:14px;cursor:pointer;
+  font-family:'Noto Sans KR',sans-serif;transition:all 0.15s;
+  touch-action:manipulation;-webkit-appearance:none;min-height:48px;
+}
+.cnav-btn:active:not(:disabled){background:var(--bg4)}
+.cnav-btn:disabled{opacity:0.3;cursor:default}
+.cnav-btn.primary{
+  background:var(--gold);border-color:var(--gold);
+  color:#1a1200;font-weight:700;flex:1;
+}
+.cnav-btn.primary:active{background:var(--gold2)}
+.cnav-txt{
+  margin-left:auto;font-family:'JetBrains Mono',monospace;
+  font-size:11px;color:var(--text3);
+}
+
+/* List view */
+.list-table{width:100%;border-collapse:collapse}
+.list-table th{
+  text-align:left;font-size:10px;color:var(--text3);
+  letter-spacing:0.08em;text-transform:uppercase;
+  padding:0 10px 10px;border-bottom:1px solid var(--border);
+}
+.list-table td{
+  padding:14px 10px;border-bottom:1px solid var(--border);
+  vertical-align:top;
+}
+.list-table tr:active td{background:var(--bg2)}
+.list-num{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3)}
+.list-kr{font-size:13px;line-height:1.6;color:var(--text)}
+.list-kr .key{color:var(--gold);font-weight:600}
+.list-en{font-size:12px;line-height:1.6;color:var(--text2);font-family:'DM Serif Display',serif}
+.list-en .key{color:var(--cyan)}
+
+/* Vocab view */
+.vocab-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.vocab-card{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:12px;padding:14px;
+}
+.vocab-card:active{border-color:var(--border2)}
+.v-en{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--gold);margin-bottom:6px;font-weight:500}
+.v-kr{font-size:12px;color:var(--text2);line-height:1.4}
+.v-ex{font-size:10px;color:var(--text3);margin-top:6px;font-style:italic;line-height:1.4}
+
+/* Quiz view */
+.quiz-card{
+  background:var(--bg2);border:1px solid var(--border2);
+  border-radius:18px;padding:24px;margin-bottom:14px;
+  position:relative;overflow:hidden;
+}
+.quiz-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--green),transparent);
+}
+.quiz-label{font-size:10px;color:var(--text3);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:14px}
+.quiz-kr{font-size:18px;font-weight:600;color:var(--text);line-height:1.6;margin-bottom:8px}
+.quiz-kr .key{color:var(--gold)}
+.quiz-hint{font-size:11px;color:var(--text3);margin-bottom:16px}
+.quiz-input{
+  width:100%;padding:13px 15px;
+  background:var(--bg3);border:1px solid var(--border2);
+  border-radius:12px;color:var(--text);font-size:15px;
+  font-family:'DM Serif Display',serif;outline:none;
+  transition:border-color 0.15s;
+}
+.quiz-input:focus{border-color:var(--gold)}
+.quiz-input::placeholder{color:var(--text3)}
+.quiz-btns{display:flex;gap:8px;margin-top:12px}
+.quiz-check{
+  padding:13px 20px;
+  background:rgba(111,207,151,0.1);
+  border:1px solid rgba(111,207,151,0.25);
+  color:var(--green);border-radius:10px;
+  font-size:14px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;
+  touch-action:manipulation;-webkit-appearance:none;min-height:48px;
+}
+.quiz-ans-btn{
+  padding:13px 20px;background:transparent;
+  border:1px solid var(--border2);color:var(--text3);
+  border-radius:10px;font-size:14px;cursor:pointer;
+  font-family:'Noto Sans KR',sans-serif;
+  touch-action:manipulation;-webkit-appearance:none;min-height:48px;
+}
+.quiz-result{
+  margin-top:12px;padding:12px 14px;
+  border-radius:10px;font-size:13px;display:none;line-height:1.6;
+}
+.quiz-result.correct{background:rgba(111,207,151,0.1);color:var(--green);border:1px solid rgba(111,207,151,0.2)}
+.quiz-result.wrong{background:rgba(235,87,87,0.1);color:var(--red);border:1px solid rgba(235,87,87,0.2)}
+.answer-text{margin-top:4px;font-family:'DM Serif Display',serif;font-size:13px;color:var(--text2)}
+
+/* ══════════ PATTERN 30 ══════════ */
+.pattern-home{padding:24px 16px}
+.pat-hero{
+  background:linear-gradient(135deg,rgba(0,229,255,0.08),rgba(167,139,250,0.06));
+  border:1px solid rgba(0,229,255,0.12);
+  border-radius:20px;padding:24px;margin-bottom:20px;
+  cursor:pointer;transition:border-color 0.2s;
+  touch-action:manipulation;-webkit-user-select:none;user-select:none;
+}
+.pat-hero:active{border-color:rgba(0,229,255,0.3)}
+.pat-eyebrow{font-size:10px;letter-spacing:0.2em;color:var(--cyan);text-transform:uppercase;margin-bottom:6px}
+.pat-hero-pattern{font-size:28px;font-weight:900;color:var(--cyan);margin-bottom:2px;line-height:1.2}
+.pat-hero-meaning{font-size:13px;color:var(--text2);margin-bottom:16px}
+.pat-hero-start{
+  display:inline-flex;align-items:center;gap:6px;
+  background:rgba(0,229,255,0.1);border:1px solid rgba(0,229,255,0.2);
+  color:var(--cyan);padding:8px 16px;border-radius:99px;
+  font-size:12px;font-weight:700;
+}
+.pat-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:20px}
+.pat-stat{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:12px;padding:12px;text-align:center;
+}
+.pat-stat-num{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:700;line-height:1}
+.pat-stat-lbl{font-size:10px;color:var(--text3);margin-top:3px}
+.pat-stat.cyan .pat-stat-num{color:var(--cyan)}
+.pat-stat.purple .pat-stat-num{color:var(--purple)}
+.pat-stat.gold .pat-stat-num{color:var(--gold)}
+.pat-prog-bar{height:3px;background:var(--bg4);border-radius:2px;overflow:hidden;margin-bottom:20px}
+.pat-prog-fill{height:100%;background:linear-gradient(90deg,var(--cyan),var(--purple));border-radius:2px;transition:width 0.5s}
+
+.pat-day-list{display:flex;flex-direction:column;gap:8px}
+.pat-day-item{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:12px;padding:14px 16px;
+  display:flex;align-items:center;gap:12px;
+  cursor:pointer;transition:border-color 0.15s;
+  touch-action:manipulation;-webkit-user-select:none;user-select:none;
+  min-height:64px;
+}
+.pat-day-item:active{background:var(--bg3)}
+.pat-day-item.completed{border-color:rgba(0,229,255,0.2)}
+.pat-day-num{
+  font-family:'JetBrains Mono',monospace;font-size:11px;
+  color:var(--text3);width:36px;flex-shrink:0;text-align:center;
+  background:var(--bg3);padding:4px 0;border-radius:8px;
+}
+.pat-day-item.completed .pat-day-num{color:var(--cyan)}
+.pat-day-pattern{font-size:14px;font-weight:700;color:var(--text);margin-bottom:1px}
+.pat-day-meaning{font-size:11px;color:var(--text3)}
+.pat-done-badge{margin-left:auto;font-size:14px;color:var(--cyan)}
+
+/* Pattern study screen */
+.pat-study-wrap{
+  flex:1;overflow-y:auto;padding:16px;
+  display:flex;flex-direction:column;gap:14px;
+}
+.pat-card{
+  background:var(--bg2);border:1px solid var(--border2);
+  border-radius:18px;padding:28px 22px;
+  min-height:200px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center;
+  cursor:pointer;transition:border-color 0.2s;
+  position:relative;
+  touch-action:manipulation;-webkit-user-select:none;user-select:none;
+}
+.pat-card.flipped{border-color:rgba(0,229,255,0.25)}
+.pat-card-hint{
+  position:absolute;top:14px;left:50%;transform:translateX(-50%);
+  font-size:9px;letter-spacing:0.15em;color:var(--text3);text-transform:uppercase;white-space:nowrap;
+}
+.pat-card-kr{font-size:18px;font-weight:700;color:var(--text);line-height:1.5}
+.pat-card-en{font-family:'DM Serif Display',serif;font-size:18px;color:var(--cyan);line-height:1.5;display:none}
+.pat-card.flipped .pat-card-kr{display:none}
+.pat-card.flipped .pat-card-en{display:block}
+.pat-tap{font-size:11px;color:var(--text3);margin-top:12px}
+.pat-mode-toggle{
+  display:flex;gap:6px;padding:0 0 2px;flex-shrink:0;
+}
+.pat-mode-btn{
+  flex:1;padding:10px;border-radius:10px;
+  border:1px solid var(--border2);background:transparent;
+  color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;
+  font-family:'Noto Sans KR',sans-serif;
+  touch-action:manipulation;-webkit-appearance:none;min-height:44px;
+}
+.pat-mode-btn.active{background:rgba(0,229,255,0.1);border-color:rgba(0,229,255,0.3);color:var(--cyan)}
+.pat-nav{display:flex;gap:8px;flex-shrink:0}
+.pat-prev{
+  padding:16px;border-radius:12px;
+  border:1px solid var(--border2);background:var(--bg2);
+  color:var(--text);font-size:16px;cursor:pointer;
+  font-family:'Noto Sans KR',sans-serif;min-width:56px;
+  touch-action:manipulation;-webkit-appearance:none;
+}
+.pat-prev:disabled{opacity:0.3;cursor:default}
+.pat-next{
+  flex:1;padding:16px;border-radius:12px;border:none;
+  background:linear-gradient(135deg,var(--cyan),#0099bb);
+  color:#000;font-size:15px;font-weight:900;cursor:pointer;
+  font-family:'Noto Sans KR',sans-serif;
+  touch-action:manipulation;-webkit-appearance:none;
+}
+
+/* ══════════ 5분 스피킹 ══════════ */
+.speaking-page{padding:0 0 16px}
+.spk-timer-sec{
+  background:var(--bg2);border-bottom:1px solid var(--border);
+  padding:24px 20px;text-align:center;
+}
+.spk-timer{
+  font-family:'JetBrains Mono',monospace;
+  font-size:56px;font-weight:700;color:var(--purple);
+  letter-spacing:4px;line-height:1;margin-bottom:10px;
+}
+.spk-timer.warning{color:var(--red)}
+.spk-prog-bar{height:6px;background:var(--bg4);border-radius:3px;overflow:hidden;margin-bottom:16px}
+.spk-prog-fill{height:100%;background:linear-gradient(90deg,var(--green),var(--gold),var(--red));border-radius:3px;transition:width 1s linear}
+.spk-btns{display:flex;gap:8px;justify-content:center}
+.spk-btn{
+  padding:12px 20px;border-radius:10px;border:none;
+  font-family:'Noto Sans KR',sans-serif;font-size:14px;font-weight:600;cursor:pointer;
+  touch-action:manipulation;-webkit-appearance:none;min-height:48px;
+}
+.spk-btn.primary{background:var(--purple);color:#fff}
+.spk-btn.success{background:var(--green);color:#000}
+.spk-btn.danger{background:var(--red);color:#fff}
+.spk-btn.outline{background:var(--bg3);color:var(--text2);border:1px solid var(--border2)}
+
+.spk-topic-card{
+  margin:16px 16px 0;
+  background:linear-gradient(135deg,rgba(167,139,250,0.1),rgba(0,229,255,0.06));
+  border:1px solid rgba(167,139,250,0.2);border-radius:18px;
+  padding:20px;text-align:center;
+}
+.spk-topic-lbl{font-size:10px;letter-spacing:0.15em;color:var(--purple);text-transform:uppercase;margin-bottom:8px}
+.spk-topic-en{font-size:20px;font-weight:900;color:var(--text);margin-bottom:4px;line-height:1.3}
+.spk-topic-kr{font-size:12px;color:var(--text3)}
+.spk-topic-btns{display:flex;gap:8px;margin-top:14px;justify-content:center}
+.spk-topic-btn{
+  padding:10px 18px;border-radius:99px;border:1px solid var(--border2);
+  background:transparent;color:var(--text2);font-size:12px;font-weight:600;
+  cursor:pointer;font-family:'Noto Sans KR',sans-serif;
+  touch-action:manipulation;-webkit-appearance:none;min-height:44px;
+}
+.spk-topic-btn.primary{background:var(--purple);border-color:var(--purple);color:#fff}
+
+.spk-fillers{padding:16px}
+.spk-filler-title{font-size:11px;color:var(--text3);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:10px}
+.filler-chips{display:flex;flex-wrap:wrap;gap:6px}
+.filler-chip{
+  padding:8px 14px;background:var(--bg3);border:1px solid var(--border);
+  border-radius:99px;font-size:12px;color:var(--text2);cursor:pointer;
+  font-family:'Noto Sans KR',sans-serif;
+  touch-action:manipulation;-webkit-appearance:none;min-height:40px;
+  display:inline-flex;align-items:center;
+}
+.filler-chip:active{background:var(--bg4)}
+
+.spk-topic-list{padding:16px}
+.spk-topic-list-title{font-size:11px;color:var(--text3);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:10px}
+.topic-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.topic-item{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:12px;padding:12px;font-size:12px;cursor:pointer;
+  transition:border-color 0.15s;line-height:1.5;color:var(--text2);
+  touch-action:manipulation;-webkit-user-select:none;user-select:none;
+}
+.topic-item:active{border-color:var(--border2);background:var(--bg3)}
+.topic-item .t-num{
+  font-family:'JetBrains Mono',monospace;font-size:9px;
+  color:var(--text3);margin-bottom:4px;display:block;
+}
+.topic-item .t-en{font-weight:600;color:var(--text);font-size:12px}
+.topic-item .t-kr{font-size:10px;color:var(--text3);margin-top:2px}
+
+/* Script display */
+.script-display{
+  margin:0 16px 16px;background:var(--bg2);
+  border:1px solid var(--border2);border-radius:16px;
+  padding:16px;display:none;
+}
+.script-header{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:14px;gap:8px;flex-wrap:wrap;
+}
+.script-title{font-size:14px;font-weight:700;color:var(--purple)}
+.script-meta-btns{display:flex;gap:6px;flex-wrap:wrap}
+.script-meta-btn{
+  padding:5px 10px;border-radius:8px;border:1px solid var(--border2);
+  background:transparent;color:var(--text3);font-size:11px;cursor:pointer;
+  font-family:'Noto Sans KR',sans-serif;
+}
+.script-meta-btn.stop{color:var(--red);border-color:rgba(235,87,87,0.3)}
+.script-section{
+  margin-bottom:14px;padding:14px;
+  background:var(--bg3);border-left:3px solid var(--purple);
+  border-radius:10px;
+}
+.script-time{font-size:11px;color:var(--purple);font-weight:700;margin-bottom:4px}
+.script-tech{font-size:10px;color:var(--green);margin-bottom:8px}
+.script-en-text{font-size:13px;line-height:1.75;color:var(--text);margin-bottom:8px}
+.script-kr-text{
+  font-size:12px;line-height:1.7;color:var(--text2);
+  padding:8px 10px;background:rgba(167,139,250,0.07);border-radius:8px;
+  border-left:2px solid rgba(167,139,250,0.3);margin-bottom:8px;
+}
+.script-vocab{
+  background:rgba(0,229,255,0.05);border-radius:8px;padding:8px 10px;
+}
+.script-vocab-item{
+  display:flex;gap:8px;padding:4px 0;border-bottom:1px solid var(--border);
+  font-size:11px;
+}
+.script-vocab-item:last-child{border-bottom:none}
+.svi-en{color:var(--cyan);font-weight:600;min-width:45%}
+.svi-kr{color:var(--text3)}
+
+/* recommended tag */
+.rec-tag{
+  display:inline-flex;align-items:center;gap:4px;
+  background:rgba(232,201,122,0.1);border:1px solid rgba(232,201,122,0.2);
+  color:var(--gold2);padding:3px 8px;border-radius:99px;
+  font-size:10px;font-weight:600;margin-top:6px;
+}
+
+/* ══════════ PROGRESS BANNER ══════════ */
+.progress-banner{
+  margin:0 16px 8px;padding:12px 14px;
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:12px;display:flex;align-items:center;gap:10px;
+}
+.pb-left{flex:1}
+.pb-title{font-size:12px;font-weight:700;color:var(--text);margin-bottom:3px}
+.pb-sub{font-size:11px;color:var(--text3)}
+.pb-pbar{height:4px;background:var(--bg4);border-radius:2px;overflow:hidden;margin-top:6px}
+.pb-pfill{height:100%;border-radius:2px;transition:width 0.4s}
+.pb-pct{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--text2)}
+
+/* ══════════ TTS SPEAK BUTTON ══════════ */
+.tts-btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:5px;
+  padding:8px 14px;border-radius:99px;border:1px solid rgba(0,229,255,0.25);
+  background:rgba(0,229,255,0.07);color:var(--cyan);
+  font-size:12px;font-weight:600;cursor:pointer;
+  font-family:'Noto Sans KR',sans-serif;
+  touch-action:manipulation;-webkit-appearance:none;
+  transition:background 0.15s,border-color 0.15s;
+  min-height:40px;
+  -webkit-tap-highlight-color:transparent;
+}
+.tts-btn:active{background:rgba(0,229,255,0.18);border-color:rgba(0,229,255,0.5)}
+.tts-btn.speaking{background:rgba(0,229,255,0.2);border-color:var(--cyan);animation:tts-pulse 0.8s ease-in-out infinite}
+.tts-btn.small{padding:5px 10px;font-size:11px;min-height:32px}
+@keyframes tts-pulse{0%,100%{opacity:1}50%{opacity:0.55}}
+
+/* ══════════ SCROLL UTILITIES ══════════ */
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:99px}
+
+/* ══════════ ANIMATION ══════════ */
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.fade-in{animation:fadeIn 0.25s ease-out}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.6}}
+.pulse{animation:pulse 0.8s ease-in-out infinite}
+
+/* Section label */
+.section-label{
+  font-size:10px;letter-spacing:0.12em;text-transform:uppercase;
+  color:var(--text3);padding:16px 16px 8px;flex-shrink:0;
+}
+
+/* Bookmarks page */
+.bm-empty{
+  flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:12px;color:var(--text3);
+  font-size:14px;padding:40px;text-align:center;
+}
+.bm-empty .bm-icon{font-size:40px}
+
+/* Search */
+.search-input{
+  width:100%;padding:13px 16px;background:var(--bg3);
+  border:1px solid var(--border2);border-radius:12px;
+  color:var(--text);font-size:15px;outline:none;
+  font-family:'Noto Sans KR',sans-serif;
+  transition:border-color 0.15s;
+}
+.search-input:focus{border-color:var(--gold)}
+.search-input::placeholder{color:var(--text3)}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ══════════ HOME ══════════ -->
+  <div class="page active" id="page-home">
+    <div class="home-page" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch">
+      <div class="home-hero">
+        <div class="hero-eyebrow">MY ENGLISH STUDY</div>
+        <div class="hero-title">오늘도 <span>영어</span><br>한 걸음 더 👊</div>
+        <div class="hero-sub">4개 앱 통합 학습 — 모바일 최적화</div>
+      </div>
+
+      <div class="streak-bar">
+        <div class="streak-pill gold">
+          <div class="sp-num" id="home-total-sent">0</div>
+          <div class="sp-lbl">총 문장</div>
+        </div>
+        <div class="streak-pill cyan">
+          <div class="sp-num" id="home-done-sent">0</div>
+          <div class="sp-lbl">완료 문장</div>
+        </div>
+        <div class="streak-pill green">
+          <div class="sp-num" id="home-pattern-done">0</div>
+          <div class="sp-lbl">패턴 완료</div>
+        </div>
+        <div class="streak-pill purple">
+          <div class="sp-num" id="home-total-pct">0%</div>
+          <div class="sp-lbl">전체 진행률</div>
+        </div>
+      </div>
+
+      <div class="section-title">📚 오늘의 학습 동선 추천</div>
+      <div class="today-plan">
+        <div class="plan-card gold-accent" onclick="openApp('gyeollon')">
+          <div class="plan-icon">📖</div>
+          <div class="plan-body">
+            <div class="plan-name">결론부터 말하기</div>
+            <div class="plan-desc" id="home-gyeollon-desc">챕터를 선택해서 학습</div>
+          </div>
+          <div class="plan-progress">
+            <div class="plan-pct" id="home-gyeollon-pct">0%</div>
+            <div class="plan-pbar"><div class="plan-pfill" id="home-gyeollon-bar" style="background:var(--gold);width:0%"></div></div>
+          </div>
+        </div>
+        <div class="plan-card cyan-accent" onclick="openApp('mouse')">
+          <div class="plan-icon">💃</div>
+          <div class="plan-body">
+            <div class="plan-name">Mouth Dance</div>
+            <div class="plan-desc" id="home-mouse-desc">일상 주제별 원어민 표현</div>
+          </div>
+          <div class="plan-progress">
+            <div class="plan-pct" id="home-mouse-pct">0%</div>
+            <div class="plan-pbar"><div class="plan-pfill" id="home-mouse-bar" style="background:var(--cyan);width:0%"></div></div>
+          </div>
+        </div>
+        <div class="plan-card green-accent" onclick="openApp('pattern')">
+          <div class="plan-icon">🎯</div>
+          <div class="plan-body">
+            <div class="plan-name">패턴영어 30일</div>
+            <div class="plan-desc" id="home-pattern-desc">오늘의 패턴 학습하기</div>
+          </div>
+          <div class="plan-progress">
+            <div class="plan-pct" id="home-pattern-pct">0%</div>
+            <div class="plan-pbar"><div class="plan-pfill" id="home-pattern-bar" style="background:var(--green);width:0%"></div></div>
+          </div>
+        </div>
+        <div class="plan-card purple-accent" onclick="openApp('speaking')">
+          <div class="plan-icon">🎤</div>
+          <div class="plan-body">
+            <div class="plan-name">5분 스피킹</div>
+            <div class="plan-desc" id="home-speaking-desc">랜덤 주제로 5분 말하기</div>
+          </div>
+          <div class="plan-progress">
+            <div class="plan-pct">—</div>
+            <div class="plan-pbar"><div class="plan-pfill" style="background:var(--purple);width:0%"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tip-banner">
+        💡 <strong>추천 학습 순서:</strong> 결론말하기/마우스댄스로 표현 익히기 → 패턴영어로 문법 다지기 → 5분 스피킹으로 실전 말하기 연습!
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ 결론부터 말하기 ══════════ -->
+  <div class="page" id="page-gyeollon">
+    <div class="inner-header">
+      <button class="back-btn" onclick="goHome()">←</button>
+      <span class="inner-title">결론부터 말하기</span>
+      <span class="inner-badge" id="gyeollon-badge">Ch.01~30</span>
+    </div>
+    <div id="gyeollon-content" style="flex:1;overflow:hidden;display:flex;flex-direction:column"></div>
+  </div>
+
+  <!-- ══════════ Mouth Dance ══════════ -->
+  <div class="page" id="page-mouse">
+    <div class="inner-header">
+      <button class="back-btn" onclick="goHome()">←</button>
+      <span class="inner-title">Mouth Dance</span>
+      <span class="inner-badge" id="mouse-badge">Ch.01~16</span>
+    </div>
+    <div id="mouse-content" style="flex:1;overflow:hidden;display:flex;flex-direction:column"></div>
+  </div>
+
+  <!-- ══════════ 패턴영어 ══════════ -->
+  <div class="page" id="page-pattern">
+    <div class="inner-header">
+      <button class="back-btn" onclick="goHome()">←</button>
+      <span class="inner-title">패턴영어 30일</span>
+      <span class="inner-badge" id="pattern-badge">30 PATTERNS</span>
+    </div>
+    <div id="pattern-content" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch"></div>
+  </div>
+
+  <!-- ══════════ 5분 스피킹 ══════════ -->
+  <div class="page" id="page-speaking">
+    <div class="inner-header">
+      <button class="back-btn" onclick="goHome()">←</button>
+      <span class="inner-title">5분 스피킹</span>
+      <span class="inner-badge">SPEAKING</span>
+    </div>
+    <div id="speaking-content" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch"></div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav">
+    <button class="nav-tab active" id="nav-home" onclick="switchTab('home')">
+      <div class="tab-icon">⌂</div>
+      <div class="tab-label">홈</div>
+    </button>
+    <button class="nav-tab" id="nav-gyeollon" onclick="switchTab('gyeollon')">
+      <div class="tab-icon">📖</div>
+      <div class="tab-label">결론말하기</div>
+    </button>
+    <button class="nav-tab" id="nav-mouse" onclick="switchTab('mouse')">
+      <div class="tab-icon">💃</div>
+      <div class="tab-label">마우스댄스</div>
+    </button>
+    <button class="nav-tab" id="nav-pattern" onclick="switchTab('pattern')">
+      <div class="tab-icon">🎯</div>
+      <div class="tab-label">패턴30일</div>
+    </button>
+    <button class="nav-tab" id="nav-speaking" onclick="switchTab('speaking')">
+      <div class="tab-icon">🎤</div>
+      <div class="tab-label">스피킹</div>
+    </button>
+  </nav>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════
+// DATA
+// ════════════════════════════════════════════════════════
+
+// ── 결론부터 말하기 chapters (representative sample + key data)
+const GYEOLLON_CHAPTERS = [
+  { id:'g1', label:'Ch.01', title:'Warm-up', subtitle:'결론부터 말하기 훈련', pattern:'step outside / go down / get motivated',
+    sentences:[
+      {kr:'너 <span class="key">괜찮으면</span> 잠깐 밖으로 나올 수 있어?', en:'Can you <span class="key">step outside</span> for a second if you\'re okay?'},
+      {kr:'나 잠깐 나갈 수 있어 <span class="key">너 여기면.</span>', en:'I can <span class="key">step outside</span> for a second if you\'re here.'},
+      {kr:'헤이 제임스, 너 혹시 나한테 <span class="key">개인적으로 감정/문제 있어?</span>', en:'Hey James, <span class="key">do you have a problem</span> with me personally?'},
+      {kr:'왜 너는 결혼하기 바로 직전에 <span class="key">직장을 그만두려고</span> 하는 거야?', en:'Why are you going to <span class="key">quit your job</span> (just) before you get married?'},
+      {kr:'너는 개랑 대화하고 나서 <span class="key">동기부여가 됐어?</span>', en:'Did you <span class="key">get motivated</span> after the conversation with him?'},
+      {kr:'두 달 또는 세 달 후에 사업이 <span class="key">내려앉기 시작하면</span> 뭐 할 거야?', en:'What are you gonna do if your business starts <span class="key">going down</span> in 2 or 3 months?'}
+    ],
+    vocab:[{en:'step outside',kr:'잠깐 밖으로 나가다',ex:'Can you step outside?'},{en:'just before',kr:'바로 ~하기 전에',ex:'just before you get married'},{en:'get motivated',kr:'동기부여를 받다',ex:'Did you get motivated?'},{en:'go down',kr:'(사업 등이) 내려가다',ex:'The business is going down'}]
+  },
+  { id:'g2', label:'Ch.02', title:'Why the long face?', subtitle:'전치사 활용', pattern:'sick and tired of / look on the bright side',
+    sentences:[
+      {kr:'나는 회사에서 같은 일을 하는 게 <span class="key">지긋지긋해 죽겠어.</span>', en:'I\'m <span class="key">sick and tired of</span> doing the same thing at work.'},
+      {kr:'나는 더 이상 회사에서 <span class="key">젠장할 정치 짓거리 못하겠어.</span>', en:'I can\'t take the <span class="key">political bull</span> in the company anymore.'},
+      {kr:'케일럽 개 아무것도 할 줄 모르는데 <span class="key">승진됐다는 걸 알게 됐어.</span>', en:'Also, <span class="key">I found out Caleb got a promotion.</span>'},
+      {kr:'그래도 <span class="key">밝게 생각해.</span> 너는 최소한 직장이라도 있잖아.', en:'but <span class="key">look on the bright side.</span> You have a job at least.'},
+      {kr:'아무튼, 우리 오늘 밤 <span class="key">술 좀 마셔야겠다.</span>', en:'Anyway, <span class="key">we should have some drinks</span> tonight.'}
+    ],
+    vocab:[{en:'sick and tired of',kr:'~이 지긋지긋한',ex:'sick and tired of doing the same thing'},{en:'look on the bright side',kr:'긍정적인 면을 보다',ex:'Look on the bright side!'},{en:'have some drinks',kr:'술을 마시다',ex:'We should have some drinks'}]
+  },
+  { id:'g3', label:'Ch.03', title:'Getting bored', subtitle:'Something / Anything / Nothing', pattern:'anything to watch / nothing to do',
+    sentences:[
+      {kr:'TV에 <span class="key">뭐 볼 거 있어?</span>', en:'Is there <span class="key">anything to watch</span> on TV?'},
+      {kr:'나 할 게 아무것도 없어서 <span class="key">점점 지루해져.</span>', en:'I have <span class="key">nothing to do</span> and I\'m getting bored.'},
+      {kr:'나도. 만나서 <span class="key">뭐라도 할래?</span>', en:'Me too. <span class="key">Do you wanna</span> get together and do something?'},
+      {kr:'오케이, 그럼 <span class="key">우리 내일 뭘 할지 계획해 보자.</span>', en:'Okay, <span class="key">let\'s plan</span> something tomorrow then.'},
+      {kr:'알았어, <span class="key">내가 너한테 6시쯤에 전화할게.</span>', en:'Okay, <span class="key">I\'ll call you</span> around 6 p.m.'}
+    ],
+    vocab:[{en:'anything to watch',kr:'아무거나 볼 것',ex:'Is there anything to watch?'},{en:'nothing to do',kr:'아무것도 할 것 없는',ex:'I have nothing to do'},{en:'do you wanna',kr:'~할래?',ex:'Do you wanna hang out?'}]
+  },
+  { id:'g4', label:'Ch.04', title:'A cute guy', subtitle:'명사 확장', pattern:'out of one\'s league / strike up a conversation',
+    sentences:[
+      {kr:'너 <span class="key">저~~기 남자에 보여?</span>', en:'Do you see <span class="key">that guy over there?</span>'},
+      {kr:'너가 봤을 때 <span class="key">재는 내 게 아닌 것 같아?</span>', en:'Do you think he\'s <span class="key">out of my league?</span>'},
+      {kr:'너 가서 재한테 인사하고 <span class="key">대화를 시작해도 돼.</span>', en:'You can go say hi to him and <span class="key">strike (up) a conversation.</span>'},
+      {kr:'나는 남자들하고 얘기할 때 <span class="key">쑥스러워져.</span>', en:'<span class="key">I get shy</span> when I talk to guys.'},
+      {kr:'지금은 말고~ <span class="key">내가 재를 다시 볼 때 시도해 볼게.</span>', en:'Not this time~ <span class="key">I\'ll give it a try</span> when I see him again.'}
+    ],
+    vocab:[{en:'out of one\'s league',kr:'~의 능력 밖인',ex:'Is he out of my league?'},{en:'strike up a conversation',kr:'대화를 걸다',ex:'strike up a conversation'},{en:'give it a try',kr:'한번 해 보다',ex:'I\'ll give it a try!'}]
+  },
+  { id:'g5', label:'Ch.05', title:'Important Grammar', subtitle:'who / that / which', pattern:'관계대명사로 명사 확장',
+    sentences:[
+      {kr:'너 내가 저번주에 말했던 <span class="key">그 남자에 기억나?</span>', en:'Do you remember <span class="key">the guy (who/that) I told you about</span> last week?'},
+      {kr:'너 요 며칠 전 밤에 잃어버렸던 <span class="key">그 돈 찾았어?</span>', en:'Did you find <span class="key">the money (that/which) you lost</span> the other night?'},
+      {kr:'나는 공공장소에서 시끄럽게 하는 <span class="key">사람들이 너무 싫어.</span>', en:'I hate <span class="key">people who make too much noise</span> in a public place.'},
+      {kr:'나는 사진이 잘 찍히는 <span class="key">핸드폰이 필요해.</span>', en:'I need <span class="key">a cell phone that/which takes good photos.</span>'},
+      {kr:'내가 어제 산 <span class="key">그 바지 벌써 얼룩졌어.</span>', en:'<span class="key">The pants (that/which) I bought yesterday</span> are already stained.'}
+    ],
+    vocab:[{en:'the other night',kr:'며칠 전 밤',ex:'I lost it the other night'},{en:'feel offended',kr:'기분이 상하다',ex:'I feel offended'},{en:'stained',kr:'얼룩진',ex:'already stained'}]
+  },
+  { id:'g6', label:'Ch.06', title:'Math problem', subtitle:'Want to, As ~ As', pattern:'how to / A is as ~ as B',
+    sentences:[
+      {kr:'야, 이거 너무 짜증 나! 너 이 문제 <span class="key">어떻게 푸는지 알아?</span>', en:'<span class="key">Do you know how to solve</span> this problem?'},
+      {kr:'나는 이 숙제에 대한 <span class="key">생각을 멈출 수가 없어.</span>', en:'I can\'t <span class="key">stop thinking</span> about this homework.'},
+      {kr:'수학은 우리가 한번 감을 잡으면 <span class="key">들리는 것처럼 무섭거나 어려운 게 아니야.</span>', en:'Math is not <span class="key">as scary or difficult as it sounds</span> once we get the hang of it.'},
+      {kr:'이 수업에 등록한 내 자신이 너무 싫어. <span class="key">나를 여기로 설득한 너가 너무 싫다.</span>', en:'I hate you for <span class="key">talking me into it.</span>'}
+    ],
+    vocab:[{en:'how to 동사',kr:'~하는 방법',ex:'how to solve this'},{en:'get the hang of',kr:'감을 잡다',ex:'get the hang of it'},{en:'talk ~ into',kr:'~를 설득하다',ex:'You talked me into it'}]
+  },
+  { id:'g7', label:'Ch.07', title:'Too much candy', subtitle:'Want you to', pattern:'want you to / be supposed to / anything but',
+    sentences:[
+      {kr:'엄마, 나 캔디 좀 <span class="key">사도 돼요?</span>', en:'Mom, <span class="key">can I buy</span> some candy?'},
+      {kr:'아이스크림은 <span class="key">캔디만큼 나빠.</span>', en:'Ice cream is <span class="key">as bad as</span> candy.'},
+      {kr:'너는 밥이랑 건강한 음식 빼고 <span class="key">아무것도 먹으면 안 돼.</span>', en:'You\'re not supposed to eat <span class="key">anything but</span> rice and healthy food.'},
+      {kr:'엄마는 그냥 <span class="key">너가 건강하길 바랄 뿐이야.</span>', en:'I just <span class="key">want you to be healthy.</span>'}
+    ],
+    vocab:[{en:'be supposed to',kr:'당연히 ~해야 한다',ex:'You\'re not supposed to eat that'},{en:'anything but',kr:'~빼고',ex:'anything but rice'},{en:'want you to',kr:'네가 ~했으면 좋겠다',ex:'I want you to be healthy'}]
+  },
+  { id:'g8', label:'Ch.08', title:'Wrong Purchase', subtitle:'수동태', pattern:'be동사 + pp / was made',
+    sentences:[
+      {kr:'제 청구서에 제가 <span class="key">구매하지 않은 요금이 있어요.</span>', en:'There\'s a charge on my bill (that) I <span class="key">didn\'t make.</span>'},
+      {kr:'고객님이 그것을 <span class="key">구매하지 않으셨다는 것이 확실하신가요?</span>', en:'<span class="key">Are you positive/sure</span> you didn\'t make that purchase?'},
+      {kr:'그 구매는 <span class="key">12월 15일 오후 4시에 진행이 됐어요.</span>', en:'The purchase <span class="key">was made</span> at 4 p.m. on December 15th.'},
+      {kr:'저희가 이 클레임에 대해 <span class="key">즉각적으로 조사를 해 보도록 할게요.</span>', en:'We\'re going to <span class="key">investigate</span> this claim immediately.'},
+      {kr:'무언가 알아내면 <span class="key">저한테 전화 부탁드려요.</span>', en:'<span class="key">Please call me</span> when you figure it out.'}
+    ],
+    vocab:[{en:'positive/sure',kr:'확실한',ex:'Are you positive?'},{en:'was made (수동태)',kr:'진행이 됐다',ex:'The purchase was made'},{en:'figure out',kr:'알아내다',ex:'when you figure it out'}]
+  },
+  { id:'g9', label:'Ch.09', title:'What are you up to?', subtitle:'have been / have pp', pattern:'I\'ve always wanted to / haven\'t seen ~ in a while',
+    sentences:[
+      {kr:'내 생각엔 <span class="key">내년에 대학원 갈 것 같아.</span>', en:'I think <span class="key">I\'m going to grad school</span> next year.'},
+      {kr:'나는 <span class="key">항상 마이크로소프트에서 일하고 싶었어,</span> 근데 들어가기가 꽤 힘들지.', en:'<span class="key">I\'ve always wanted to work</span> at Microsoft, but it\'s pretty tough.'},
+      {kr:'나 마이크 안 본 지 꽤 오래됐어. <span class="key">개 어떻게 지내는지 알아?</span>', en:'<span class="key">I haven\'t seen Mike in a while.</span> Do you know what he\'s up to?'},
+      {kr:'너희 계획에 <span class="key">행운을 빌게.</span> <span class="key">의심의 여지가 없어!</span>', en:'I wish you the best of luck. <span class="key">I have no doubt</span> you guys are gonna do great!'},
+      {kr:'오케이, 알았어. <span class="key">조만간 또 보자!</span>', en:'Okay, then. <span class="key">I\'ll catch you later!</span>'}
+    ],
+    vocab:[{en:'have pp',kr:'~해 왔다',ex:'I\'ve always wanted to'},{en:'haven\'t pp',kr:'~을 못 하고 있다',ex:'haven\'t seen in a while'},{en:'I have no doubt',kr:'의심의 여지가 없어',ex:'I have no doubt you\'ll do great'}]
+  },
+  { id:'g10', label:'Ch.10', title:'Living Abroad', subtitle:'+ing로 주어 만들기', pattern:'Living abroad will give you... / Speaking of',
+    sentences:[
+      {kr:'해외에 사는 것은 너에게 <span class="key">커뮤니케이션 스킬을 향상시킬 수 있는 기회를 줄 거야.</span>', en:'<span class="key">Living abroad will give you</span> the opportunity to improve your communication skills.'},
+      {kr:'해외에 사는 거 얘기해 보자면, <span class="key">엄청 많은 혜택들이 있어.</span>', en:'<span class="key">Speaking of living abroad, there are</span> so many benefits.'},
+      {kr:'그 말은 뭐냐면, 너는 다른 사람들에게 <span class="key">마음을 열어야 된다는 거야.</span>', en:'That means, you have to <span class="key">open your mind to others.</span>'}
+    ],
+    vocab:[{en:'Speaking of',kr:'~에 대해 얘기해 보자면',ex:'Speaking of living abroad...'},{en:'the opportunity to',kr:'~할 기회',ex:'the opportunity to improve'},{en:'open one\'s mind to',kr:'~에게 마음을 열다',ex:'open your mind to others'}]
+  },
+  { id:'g11', label:'Ch.11', title:'Delays', subtitle:'현재진행 ing / 미래 ing', pattern:'be +ing (미래/현재) / way around',
+    sentences:[
+      {kr:'배송 지연 건에 대해 <span class="key">걱정이 돼요.</span>', en:'I\'m <span class="key">worried/concerned about the delays</span> with some of our suppliers.'},
+      {kr:'몇몇 배송들은 내일 <span class="key">도착해.</span>', en:'A number of deliveries <span class="key">are arriving</span> tomorrow.'},
+      {kr:'저희는 더 이상의 <span class="key">핑계를 댈 수가 없어요.</span>', en:'We can\'t <span class="key">make any more excuses</span> to our clients.'},
+      {kr:'이 딜레이들에 대한 <span class="key">해결책이 있을까요?</span>', en:'Is there any <span class="key">way around</span> these delays?'}
+    ],
+    vocab:[{en:'get back on schedule',kr:'원래 일정에 맞추다',ex:'We\'re trying to get back on schedule'},{en:'troublesome',kr:'말썽인',ex:'this time of year is troublesome'},{en:'way around',kr:'해결책',ex:'Is there a way around this?'}]
+  },
+  { id:'g12', label:'Ch.12', title:'How to Explain', subtitle:'상황 설명 & 가주어', pattern:'It seems like / It looks like / It sounds like',
+    sentences:[
+      {kr:'요즘 젊은 사람들은 직업 정신이 부족한 <span class="key">것 같아.</span>', en:'<span class="key">It seems like</span> young people these days are short on work ethic.'},
+      {kr:'그들의 관계는 끝난 <span class="key">것 같아 보여.</span>', en:'<span class="key">It looks like</span> their relationship is over.'},
+      {kr:'너 어젯밤에 즐거웠나 봐!', en:'<span class="key">It sounds like</span> you had so much fun last night!'},
+      {kr:'밤늦게까지 공부하는 건 <span class="key">힘들어.</span>', en:'<span class="key">It\'s hard</span> to study late at night.'}
+    ],
+    vocab:[{en:'It seems like',kr:'전반적으로 그런 것 같을 때',ex:'It seems like they are busy'},{en:'It looks like',kr:'보고 그런 것 같을 때',ex:'It looks like rain'},{en:'It sounds like',kr:'듣고 그런 것 같을 때',ex:'It sounds like a great plan!'}]
+  },
+  { id:'g13', label:'Ch.13', title:'How to Speak Succinctly', subtitle:'간결하게 말하기', pattern:'go from A to B / it\'s all about',
+    sentences:[
+      {kr:'저는 당신이 기억나요 <span class="key">필라테스 수업에서.</span>', en:'Hello, I <span class="key">remember you from</span> the Pilates class.'},
+      {kr:'나는 집만 있는 쑥스러운 여자였어. 이 여자애를 만나고 나서부터는, <span class="key">아웃사이더에서 훨씬 더 외향적인 사람으로 변했어.</span>', en:'I <span class="key">went from an outsider to being</span> much more outgoing and social.'},
+      {kr:'나는 20살 때 <span class="key">이것저것 다 해 봤어.</span>', en:'<span class="key">I went through so many different jobs</span> when I was 20.'},
+      {kr:'나는 원래 돈을 많이 받고 일했다가 <span class="key">한 푼도 못 벌게 됐었어.</span>', en:'I <span class="key">went from good pay to zero pay.</span>'}
+    ],
+    vocab:[{en:'go from A to B',kr:'A에서 B로 변하다',ex:'went from good pay to zero pay'},{en:'it\'s all about',kr:'~이 다야',ex:'It was all about filing paperwork'},{en:'you name it!',kr:'말만 해봐!',ex:'Sales, teaching, you name it!'}]
+  },
+  { id:'g14', label:'Ch.14', title:'대화의 흐름 Part.1', subtitle:'Today / Most of the time / Provoke', pattern:'Tonight + going to / Most of the time / All you have to do is',
+    sentences:[
+      {kr:'보통 대부분 그녀는 정말로 나이스한 여자야, <span class="key">그런데 가끔 그녀는 매우 예민해져.</span>', en:'<span class="key">Most of the time</span> she\'s a really nice girl, but sometimes she gets very sensitive.'},
+      {kr:'내 친구가 Google에 취직했어. <span class="key">이게 내가 더 열심히 일하도록 자극해.</span>', en:'My friend got a job at Google. <span class="key">It provokes me to work harder.</span>'},
+      {kr:'네가 해야 하는 건 <span class="key">그냥 기다리는 것밖에 없어.</span>', en:'<span class="key">All you have to do is</span> just wait.'},
+      {kr:'네가 영어를 배우려고 하는 거면, <span class="key">넌 잉글리스트를 알아봐야 해.</span>', en:'<span class="key">If you\'re trying to</span> learn English, you should check out Englist.'}
+    ],
+    vocab:[{en:'Most of the time',kr:'대부분의 경우',ex:'Most of the time, I go out for dinner'},{en:'provoke ~ to',kr:'~가 ~하도록 자극하다',ex:'It provokes me to work harder'},{en:'All you have to do is',kr:'~밖에 없어',ex:'All you have to do is wait'}]
+  },
+  { id:'g15', label:'Ch.15', title:'대화의 흐름 Part.2', subtitle:'embrace / have a long way to go', pattern:'embrace / put on hold / talk ~ out of / I\'m afraid',
+    sentences:[
+      {kr:'나는 여기서 사람들과 일하는 게 마음에 들지 않았어, 하지만 <span class="key">다른 방식들의 일을 받아들여야 했어.</span>', en:'I had to <span class="key">embrace different ways of working.</span>'},
+      {kr:'우린 많은 것을 이루어 냈지만, <span class="key">아직 가야 할 길이 멀어.</span>', en:'We still <span class="key">have a long way to go.</span>'},
+      {kr:'그의 부모님은 그가 혼자 살지 않게 <span class="key">설득하고 있어.</span>', en:'His parents are trying to <span class="key">talk him out of</span> living alone.'},
+      {kr:'난 내 여자 친구가 <span class="key">날 떠날까 봐 두려워.</span>', en:'I\'m <span class="key">afraid/worried</span> my girlfriend is going to walk out on me.'}
+    ],
+    vocab:[{en:'embrace',kr:'수용하다, 받아들이다',ex:'embrace different ways'},{en:'have a long way to go',kr:'아직 멀었어',ex:'still have a long way to go'},{en:'talk ~ out of',kr:'~하지 못하도록 설득하다',ex:'talk him out of living alone'}]
+  },
+  { id:'g16', label:'Ch.16', title:'대화의 흐름 Part.3', subtitle:'I\'m surprised / I(\'ve) decided', pattern:'I\'m surprised / I(\'ve) decided / One thing... Another thing...',
+    sentences:[
+      {kr:'나는 우리가 <span class="key">아무런 도움 없이 여기까지 온 것이 놀라워!</span>', en:'I\'m <span class="key">surprised we\'ve come this far</span> without any help!'},
+      {kr:'나는 유튜브 비디오를 만들기로 <span class="key">결심했어.</span>', en:'I(\'ve) <span class="key">decided</span> I\'m gonna start making YouTube videos.'},
+      {kr:'내가 이 공원에 대해 사랑하는 <span class="key">한 가지는</span> 잔디 밭이 있다는 거야.', en:'<span class="key">One thing I love about</span> this park is that it has grassy fields.'},
+      {kr:'내가 이 폰에 대해 사랑하는 <span class="key">가장 좋은 점은</span> 분할 화면 기능이 있다는 거야.', en:'<span class="key">The best thing I love about</span> this phone is that it has split screen.'}
+    ],
+    vocab:[{en:'I\'m surprised/shocked',kr:'~가 놀라워',ex:'I\'m surprised how quickly time passes'},{en:'I(\'ve) decided + I\'m going to',kr:'~하기로 결심했어',ex:'I\'ve decided I\'m gonna try it'},{en:'One/Another/The best thing I love about',kr:'~에 대해 내가 좋아하는 점',ex:'One thing I love about this is...'}]
+  },
+];
+
+// ── Mouth Dance chapters
+const MOUSE_CHAPTERS = [
+  { id:'m1', label:'Ch.01', title:'일상대화', subtitle:'How was / Hang out / Free', pattern:'How was 명사? / Hang out / Free / How about',
+    sentences:[
+      {kr:'너의 주말은 <span class="key">어땠어?</span>', en:'<span class="key">How was</span> your weekend?'},
+      {kr:'나는 가족이랑 <span class="key">공원에 갔어.</span>', en:'I <span class="key">went to the park</span> with my family.'},
+      {kr:'너 이번 주 토요일 <span class="key">시간 돼?</span>', en:'Are you <span class="key">free</span> this Saturday?'},
+      {kr:'영화 보러 가거나 시내에 새로운 일본 음식점 가는 건 <span class="key">어때?</span>', en:'<span class="key">How about</span> going to the movies or trying out a new Japanese restaurant downtown?'},
+      {kr:'나는 더 이상 <span class="key">집에 못 있겠어.</span>', en:'I can\'t <span class="key">stay at home</span> anymore.'},
+      {kr:'너 이번 주 토요일에 <span class="key">만나서 놀래?</span>', en:'Do you wanna <span class="key">hang out</span> this Saturday?'}
+    ],
+    vocab:[{en:'How was 명사?',kr:'~은 어땠어?',ex:'How was your weekend?'},{en:'hang out',kr:'만나서 놀다',ex:'Do you wanna hang out?'},{en:'free',kr:'시간이 나는',ex:'Are you free this Saturday?'},{en:'How about +ing?',kr:'~하는 건 어때?',ex:'How about going to the movies?'}]
+  },
+  { id:'m2', label:'Ch.02', title:'몸매관리', subtitle:'Notice / Get rid of / Hit the gym', pattern:'get rid of / hit the gym / within walking distance',
+    sentences:[
+      {kr:'나 한 번도 너 뚱배 <span class="key">못 봤어.</span>', en:'I\'ve never <span class="key">noticed</span> that belly of yours.'},
+      {kr:'만약 너가 그 뚱배를 <span class="key">없앤다면,</span> 훨씬 더 나아 보일 거야.', en:'If you <span class="key">get rid of</span> that belly, you\'ll look so much better.'},
+      {kr:'나 오늘 <span class="key">헬스장 갔어야 돼.</span>', en:'I should\'ve <span class="key">hit the gym</span> today.'},
+      {kr:'우리 집에서 <span class="key">걸어갈 수 있는 거리야.</span>', en:'It\'s <span class="key">within walking distance</span> of my house.'}
+    ],
+    vocab:[{en:'notice',kr:'알아차리다',ex:'Did she notice that belly?'},{en:'get rid of',kr:'없애다',ex:'get rid of this belly'},{en:'hit the gym',kr:'헬스장에 가다',ex:'hit the gym tonight'},{en:'within walking distance',kr:'걸어갈 수 있는 거리',ex:'within walking distance of my house'}]
+  },
+  { id:'m3', label:'Ch.03', title:'엘리베이터', subtitle:'Work in / Get used to / Settle in', pattern:'press / work in / get used to / settle in',
+    sentences:[
+      {kr:'<span class="key">6층 눌러 주실 수 있으세요?</span>', en:'<span class="key">Can you press 6,</span> please?'},
+      {kr:'저 <span class="key">마케팅해요.</span>', en:'I <span class="key">work in marketing.</span>'},
+      {kr:'아직 모든 것에 <span class="key">적응 중이에요.</span>', en:'I\'m still <span class="key">getting used to everything.</span>'},
+      {kr:'<span class="key">빠르게 자리 잡을 거예요.</span>', en:'You\'ll <span class="key">settle in quickly.</span>'}
+    ],
+    vocab:[{en:'work in',kr:'~분야에서 일하다',ex:'I work in marketing'},{en:'get used to',kr:'~에 적응하다',ex:'getting used to everything'},{en:'settle in',kr:'자리 잡다',ex:'You\'ll settle in quickly'}]
+  },
+  { id:'m4', label:'Ch.04', title:'집안일', subtitle:'Give ~ a bath / Tuck ~ in / Chores', pattern:'help ~ / give ~ a bath / tuck ~ in / chores',
+    sentences:[
+      {kr:'나 테이블 치우는 것 좀 <span class="key">도와줄 수 있어?</span>', en:'Could you <span class="key">help me clean</span> the table?'},
+      {kr:'우리 언제 강아지 <span class="key">목욕시킬 거야?</span>', en:'When are we going to <span class="key">give our puppy a bath?</span>'},
+      {kr:'내가 애 <span class="key">이불 덮어 주고</span> 이마에 뽀뽀해 줄 거야.', en:'I\'ll <span class="key">tuck him in</span> and give him a kiss on his forehead.'},
+      {kr:'내가 너 <span class="key">집안일 더 자주 도울게.</span>', en:'I\'ll help you with the <span class="key">house chores</span> more often.'}
+    ],
+    vocab:[{en:'give ~ a bath',kr:'~를 목욕시키다',ex:'give the puppy a bath'},{en:'tuck ~ in',kr:'이불을 덮어 주다',ex:'tuck him in'},{en:'house chores',kr:'집안일',ex:'help with the house chores'}]
+  },
+  { id:'m5', label:'Ch.05', title:'사랑', subtitle:'Can\'t get ~ out of mind / Strike up', pattern:'can\'t get ~ out of mind / the way / strike up a conversation',
+    sentences:[
+      {kr:'나는 그녀를 머릿속에서 <span class="key">떨쳐 낼 수가 없어.</span>', en:'I can\'t <span class="key">get her out of my mind.</span>'},
+      {kr:'나는 그녀가 말하는 것, 걷는 것이 좋아.', en:'I love <span class="key">the way</span> she talks, <span class="key">the way</span> she walks.'},
+      {kr:'나라면 그녀한테 <span class="key">말을 걸어 보려고 할 것 같아.</span>', en:'I would try to <span class="key">strike up a conversation</span> with her.'},
+      {kr:'<span class="key">용기 있게 행동해!</span>', en:'<span class="key">Man up!</span>'}
+    ],
+    vocab:[{en:'can\'t get ~ out of mind',kr:'머릿속에서 떨쳐낼 수 없다',ex:'can\'t get her out of my mind'},{en:'the way 주어+동사',kr:'~가 ~하는 방식',ex:'I love the way she talks'},{en:'strike up a conversation',kr:'대화를 걸다',ex:'strike up a conversation'}]
+  },
+  { id:'m6', label:'Ch.06', title:'쇼핑', subtitle:'Look for / Ongoing / Within budget', pattern:'look for / ongoing / within budget / feel free to',
+    sentences:[
+      {kr:'저 학교용 노트북 하나 <span class="key">찾고 있어요.</span>', en:'I\'m <span class="key">looking for</span> a laptop for school.'},
+      {kr:'이거 진행 중인 <span class="key">프로모션이나 할인 있을까요?</span>', en:'Is there any <span class="key">ongoing</span> promotion or discount?'},
+      {kr:'그건 제 <span class="key">예산 범위 안에 있네요.</span>', en:'It\'s <span class="key">within my budget.</span>'},
+      {kr:'저희한테 아무 때나 <span class="key">편하게 연락 주세요.</span>', en:'Please <span class="key">feel free to contact</span> us anytime.'}
+    ],
+    vocab:[{en:'look for',kr:'~을 찾다',ex:'looking for a laptop'},{en:'ongoing',kr:'진행 중인',ex:'ongoing promotion'},{en:'within my budget',kr:'예산 범위 안에',ex:'within my budget'},{en:'feel free to',kr:'편하게 ~하다',ex:'feel free to contact us'}]
+  },
+  { id:'m7', label:'Ch.07', title:'얼룩', subtitle:'Stain / Come across / Look up', pattern:'rub off / come off / come across / look ~ up',
+    sentences:[
+      {kr:'너 벽에 저 <span class="key">얼룩 봤어?</span>', en:'Did you notice that <span class="key">stain</span> on the wall?'},
+      {kr:'내가 그거 문질러서 지우려고 했는데, <span class="key">없어지질 않아.</span>', en:'I tried to rub it off, but it wouldn\'t <span class="key">come off.</span>'},
+      {kr:'나 우연히 아주 훌륭한 DIY 청소법을 온라인에서 <span class="key">발견하게 됐어.</span>', en:'I happened to <span class="key">come across</span> a great DIY cleaning recipe online.'},
+      {kr:'내가 그거 다시 <span class="key">찾아보고</span> 내일 시도해 볼게.', en:'I\'ll <span class="key">look it up</span> again and try it tomorrow.'}
+    ],
+    vocab:[{en:'rub ~ off / come off',kr:'문질러 지우다 / 지워지다',ex:'tried to rub it off'},{en:'come across',kr:'우연히 발견하다',ex:'come across a great recipe'},{en:'look ~ up',kr:'검색하다, 찾아보다',ex:'I\'ll look it up'}]
+  },
+  { id:'m8', label:'Ch.08', title:'집초대 I', subtitle:'Have ~ over / Get over / It takes', pattern:'have ~ over / it takes / pick up on the way',
+    sentences:[
+      {kr:'나 오늘 밤 저녁 식사에 <span class="key">친구 초대해.</span>', en:'I\'m <span class="key">having a friend over</span> for dinner tonight.'},
+      {kr:'다 <span class="key">잊어!</span>', en:'<span class="key">Get over it!</span>'},
+      {kr:'<span class="key">오래 안 걸릴 거야.</span>', en:'It <span class="key">shouldn\'t take long.</span>'},
+      {kr:'아무거나 내가 <span class="key">사 갔으면 하는 거 있어</span> 가는 길에?', en:'Is there anything you want me to <span class="key">pick up on the way?</span>'},
+      {kr:'아니. <span class="key">그냥 몸만 와.</span>', en:'No. <span class="key">Just bring yourself.</span>'}
+    ],
+    vocab:[{en:'have ~ over',kr:'~을 집에 초대하다',ex:'having a friend over'},{en:'get over',kr:'극복하다 / 잊다',ex:'Get over it!'},{en:'it shouldn\'t take long',kr:'오래 안 걸릴 거야',ex:'It shouldn\'t take long'},{en:'pick up on the way',kr:'가는 길에 사 가다',ex:'pick up on the way'}]
+  },
+  { id:'m9', label:'Ch.09', title:'집초대 II', subtitle:'Take off / Addictive / Allergic to', pattern:'take off / this is where / exotic / addictive / allergic to',
+    sentences:[
+      {kr:'내가 조그만 거 뭐 하나 <span class="key">사 왔어.</span>', en:'I <span class="key">brought you</span> a little something.'},
+      {kr:'너 신발 여기에 <span class="key">벗으면 돼.</span>', en:'You can <span class="key">take off</span> your shoes here.'},
+      {kr:'그거 <span class="key">엄청 중독돼.</span>', en:'It gets so <span class="key">addictive.</span>'},
+      {kr:'너 아무 음식에 <span class="key">알러지 있어?</span>', en:'Are you <span class="key">allergic to</span> any foods?'},
+      {kr:'집처럼 <span class="key">편하게 있어.</span>', en:'Please <span class="key">make yourself at home.</span>'},
+      {kr:'아, <span class="key">안 그래도 되는데.</span>', en:'Oh, <span class="key">you shouldn\'t have.</span>'}
+    ],
+    vocab:[{en:'take off',kr:'벗다 / 자리를 떠나다',ex:'take off your shoes'},{en:'addictive',kr:'중독성 있는',ex:'It gets so addictive'},{en:'allergic to',kr:'~에 알러지가 있는',ex:'allergic to cats'},{en:'make yourself at home',kr:'집처럼 편하게 있어',ex:'Please make yourself at home'}]
+  },
+  { id:'m10', label:'Ch.10', title:'프로그램 등록', subtitle:'Participate in / Fill out / Just in case', pattern:'participate in / fill out / supposed to be / just in case',
+    sentences:[
+      {kr:'나 뭔가에 <span class="key">정신 팔려 있었어.</span>', en:'I was <span class="key">preoccupied with</span> something.'},
+      {kr:'우리 온라인 <span class="key">신청서/등록서 작성해야 돼.</span>', en:'We need to <span class="key">fill out</span> an online registration form.'},
+      {kr:'여기 원래 10시까지 열려 있어야 하는데, 오늘 일찍 닫았나 봐.', en:'It\'s <span class="key">supposed to be</span> open until 10 p.m., but it closed early today.'},
+      {kr:'내 생각엔 우리 등록해야 돼 <span class="key">혹시 개네가 그거 연장 안 할지도 모르니까.</span>', en:'I think we have to register <span class="key">just in case</span> they don\'t extend it.'},
+      {kr:'그래서 <span class="key">우리가 서둘러야 되는 거야.</span>', en:'<span class="key">That\'s why</span> we have to hurry.'}
+    ],
+    vocab:[{en:'fill out',kr:'(서류를) 작성하다',ex:'fill out the form'},{en:'supposed to be',kr:'원래 ~이어야 한다',ex:'It\'s supposed to be next Friday'},{en:'just in case',kr:'혹시 모르니까',ex:'register just in case'},{en:'That\'s why',kr:'그래서 ~인 거야',ex:'That\'s why we have to hurry'}]
+  },
+  { id:'m11', label:'Ch.11', title:'중고 되팔기', subtitle:'Put ~ up for sale / Negotiable / Wire', pattern:'put ~ up for sale / negotiable / looking to / wire',
+    sentences:[
+      {kr:'너 그것들 <span class="key">팔려고 내놨어?</span>', en:'Have you <span class="key">put them up for sale?</span>'},
+      {kr:'이것들 <span class="key">상태 좋아.</span>', en:'These are <span class="key">in good condition.</span>'},
+      {kr:'가격은 <span class="key">협상 가능할 거야.</span>', en:'The prices will be <span class="key">negotiable.</span>'},
+      {kr:'내가 지금 당장 너 은행 계좌로 <span class="key">송금할게.</span>', en:'I\'ll <span class="key">wire the money</span> to your bank account right now.'},
+      {kr:'내가 너 350불 줄게. <span class="key">어떻할래?</span>', en:'I\'ll give you $350. <span class="key">What do you say?</span>'}
+    ],
+    vocab:[{en:'put ~ up for sale',kr:'팔려고 내놓다',ex:'put them up for sale'},{en:'negotiable',kr:'협상 가능한',ex:'The price is negotiable'},{en:'wire (money)',kr:'송금하다',ex:'wire the money to your account'}]
+  },
+  { id:'m12', label:'Ch.12', title:'일에 지칠 때', subtitle:'Non-stop / Fall behind / Drained', pattern:'work non-stop / fall behind / take time off / drained',
+    sentences:[
+      {kr:'나는 <span class="key">쉬지 않고 일해 오고 있어.</span>', en:'I\'ve been <span class="key">working non-stop.</span>'},
+      {kr:'나는 회사에서 <span class="key">뒤처지는 것 같아.</span>', en:'I feel like I\'m <span class="key">falling behind</span> at work.'},
+      {kr:'너는 회사에 잠깐 <span class="key">휴가를 내고 쉬어야 할지도 몰라.</span>', en:'Maybe you should <span class="key">take some time off work.</span>'},
+      {kr:'나 완전 <span class="key">진이 다 빠졌어.</span>', en:'I\'m totally <span class="key">drained.</span>'},
+      {kr:'나는 내 인생에서 <span class="key">재밌는 것과 의미 있는 것을 하고 싶어.</span>', en:'I wanna do <span class="key">something fun and meaningful</span> in my life.'}
+    ],
+    vocab:[{en:'work non-stop',kr:'쉬지 않고 일하다',ex:'I\'ve been working non-stop'},{en:'fall behind',kr:'뒤처지다',ex:'falling behind at work'},{en:'take time off',kr:'휴가를 내다',ex:'take some time off work'},{en:'drained',kr:'진이 빠진',ex:'I\'m totally drained'}]
+  },
+  { id:'m13', label:'Ch.13', title:'정전', subtitle:'Run out of / Blackout / Depends on', pattern:'run out of / go out / blackout / it depends on',
+    sentences:[
+      {kr:'전구가 <span class="key">계속 깜빡거려.</span>', en:'The lights keep <span class="key">blinking/flickering.</span>'},
+      {kr:'우리 <span class="key">전기 나가고(고갈되고) 있어.</span>', en:'We\'re <span class="key">running out of</span> electricity.'},
+      {kr:'전원 <span class="key">방금 나갔어.</span>', en:'The power just <span class="key">went out.</span>'},
+      {kr:'태풍 때문에 <span class="key">어젯밤 정전됐었어.</span>', en:'There was a <span class="key">blackout</span> last night because of the storm.'},
+      {kr:'그건 전기회사가 얼마나 빠르게 그걸 고칠 수 있느냐에 <span class="key">달려 있어.</span>', en:'It <span class="key">depends on</span> how quickly the utility company can fix it.'},
+      {kr:'<span class="key">진짜 다행이다.</span>', en:'<span class="key">What a relief.</span>'}
+    ],
+    vocab:[{en:'run out of',kr:'~이 다 떨어지다',ex:'running out of electricity'},{en:'go out',kr:'(전원이) 나가다',ex:'The power went out'},{en:'blackout',kr:'정전',ex:'There was a blackout'},{en:'it depends on',kr:'~에 달려 있다',ex:'It depends on how quickly'}]
+  },
+  { id:'m14', label:'Ch.14', title:'긴 문장 훈련 I', subtitle:'That / Who / Which', pattern:'the 명사 that/who/which ~',
+    sentences:[
+      {kr:'너 지난주에 내가 말했던 <span class="key">그 남자 기억나?</span>', en:'Do you remember the guy <span class="key">that/who</span> I told you about last week?'},
+      {kr:'너 며칠 전 밤에 잃어버린 <span class="key">그 돈 찾았어?</span>', en:'Have you found the money <span class="key">that/which</span> you lost the other night?'},
+      {kr:'우리 이거 <span class="key">도와줄 사람 아무나 알아?</span>', en:'Do you know anyone <span class="key">who</span> can help us with this?'},
+      {kr:'나는, 다음 달에 나올, <span class="key">새로운 아이폰 기다리고 있어.</span>', en:'I\'m waiting for the new iPhone, <span class="key">which will</span> be released next month.'}
+    ],
+    vocab:[{en:'that/who (사람)',kr:'~인 (사람)',ex:'the guy that/who I told you about'},{en:'that/which (사물)',kr:'~인 (사물)',ex:'the money that/which I lost'},{en:', which will ~',kr:'(앞 명사)가 ~할 것인데',ex:'the new iPhone, which will be released'}]
+  },
+  { id:'m15', label:'Ch.15', title:'수동태', subtitle:'is/was + pp', pattern:'is/was + pp',
+    sentences:[
+      {kr:'이곳에서 흡연은 <span class="key">엄격하게 금지됩니다.</span>', en:'Smoking <span class="key">is strictly prohibited</span> here.'},
+      {kr:'비행기가 <span class="key">취소됐어.</span>', en:'The flight <span class="key">is cancelled.</span>'},
+      {kr:'미팅이 <span class="key">연기됐어.</span>', en:'The meeting <span class="key">is delayed.</span>'},
+      {kr:'그가 <span class="key">해고당했어.</span>', en:'He <span class="key">is fired.</span>'},
+      {kr:'스티브 스필버그에 의해 <span class="key">연출된 영화들은</span> 많은 상을 받았어.', en:'The movies that <span class="key">were directed by</span> Steven Spielberg won a lot of awards.'}
+    ],
+    vocab:[{en:'is/was + pp (수동태)',kr:'~되다, ~당하다',ex:'My blog is updated every day'},{en:'is strictly prohibited',kr:'엄격하게 금지되다',ex:'Smoking is strictly prohibited'},{en:'is cancelled / delayed',kr:'취소/연기되다',ex:'The flight is cancelled'}]
+  },
+  { id:'m16', label:'Ch.16', title:'긴 문장 훈련 II', subtitle:'what / where / how / why', pattern:'what / where / how (간접의문문)',
+    sentences:[
+      {kr:'너 저번 주에 내가 <span class="key">말했던 것 기억나?</span>', en:'Do you remember <span class="key">what</span> I told you last week?'},
+      {kr:'이거 저희가 <span class="key">주문한 것 아니에요.</span>', en:'This is not <span class="key">what</span> we ordered.'},
+      {kr:'이게 내가 와이프랑 <span class="key">화해하는 방법이야.</span>', en:'This is <span class="key">how</span> I make up with my wife.'},
+      {kr:'너는 내가 왜 일하는지 그리고 <span class="key">누굴 위해 일하는지 알기나 해?</span>', en:'Do you have any idea <span class="key">why</span> I\'m working and <span class="key">who</span> I\'m working for?'}
+    ],
+    vocab:[{en:'what (간접의문문)',kr:'~한 것',ex:'what I told you'},{en:'where (간접의문문)',kr:'~한 곳',ex:'not where you\'ll find it'},{en:'how (간접의문문)',kr:'~하는 방법',ex:'how I make up with my wife'}]
+  },
+];
+
+// ── Pattern 30 days
+const PATTERNS = [
+  {id:1,pattern:"I'm trying to",meaning:"~하려고 노력 중이다",cards:[{kr:"나 지금 살 빼려고 노력 중이야.",en:"I'm trying to lose weight."},{kr:"나 지금 집중하려고 하는 중이야.",en:"I'm trying to focus."},{kr:"나 지금 영어 공부하려고 노력 중이야.",en:"I'm trying to study English."},{kr:"나 지금 더 일찍 자려고 노력 중이야.",en:"I'm trying to sleep earlier."},{kr:"나 지금 설명하려고 하는 거야.",en:"I'm trying to explain."}]},
+  {id:2,pattern:"I'm supposed to",meaning:"~하기로 되어 있다",cards:[{kr:"나 오늘 회의 있기로 되어 있어.",en:"I'm supposed to have a meeting today."},{kr:"너 여기 있으면 안 되잖아.",en:"You're not supposed to be here."},{kr:"나 지금 공부하기로 되어 있는데.",en:"I'm supposed to be studying now."},{kr:"우리 6시에 만나기로 했잖아.",en:"We're supposed to meet at 6."},{kr:"나 오늘 일찍 퇴근하기로 되어 있어.",en:"I'm supposed to leave early today."}]},
+  {id:3,pattern:"I was about to",meaning:"막 ~하려던 참이다",cards:[{kr:"나 막 전화하려던 참이었어.",en:"I was about to call you."},{kr:"나 막 나가려던 참이었어.",en:"I was about to leave."},{kr:"나 막 밥 먹으려던 참이었어.",en:"I was about to eat."},{kr:"나 막 그거 말하려던 참이었는데.",en:"I was about to say that."},{kr:"나 막 포기하려던 참이었어.",en:"I was about to give up."}]},
+  {id:4,pattern:"I'm here to",meaning:"~하러 왔다",cards:[{kr:"저 도와드리러 왔어요.",en:"I'm here to help."},{kr:"저 픽업하러 왔어요.",en:"I'm here to pick you up."},{kr:"저 확인하러 왔어요.",en:"I'm here to check on you."},{kr:"저 이야기 나누러 왔어요.",en:"I'm here to talk."},{kr:"저 지원하러 왔어요.",en:"I'm here to apply."}]},
+  {id:5,pattern:"I've been ~ing",meaning:"계속 ~해 오고 있다",cards:[{kr:"계속 너 기다리고 있었어.",en:"I've been waiting for you."},{kr:"나 요즘 계속 운동하고 있어.",en:"I've been working out lately."},{kr:"나 영어 공부 계속 해오고 있어.",en:"I've been studying English."},{kr:"나 요즘 계속 바빴어.",en:"I've been really busy lately."},{kr:"나 그 드라마 계속 보고 있어.",en:"I've been watching that show."}]},
+  {id:6,pattern:"Let me",meaning:"내가 ~할게",cards:[{kr:"내가 확인해볼게.",en:"Let me check."},{kr:"내가 생각해볼게.",en:"Let me think."},{kr:"내가 설명해줄게.",en:"Let me explain."},{kr:"내가 도와줄게.",en:"Let me help you."},{kr:"내가 알아볼게.",en:"Let me find out."}]},
+  {id:7,pattern:"Can I get?",meaning:"~를 주시겠어요?",cards:[{kr:"아메리카노 한 잔 주시겠어요?",en:"Can I get an Americano?"},{kr:"영수증 주시겠어요?",en:"Can I get a receipt?"},{kr:"물 한 잔 주시겠어요?",en:"Can I get some water?"},{kr:"이거 포장해 주실 수 있나요?",en:"Can I get this to go?"},{kr:"할인 받을 수 있나요?",en:"Can I get a discount?"}]},
+  {id:8,pattern:"Can you?",meaning:"~해줄 수 있나요?",cards:[{kr:"좀 도와줄 수 있어?",en:"Can you help me?"},{kr:"다시 말해줄 수 있어요?",en:"Can you say that again?"},{kr:"좀 빨리 해줄 수 있어?",en:"Can you hurry up?"},{kr:"문 닫아줄 수 있어?",en:"Can you close the door?"},{kr:"나중에 다시 전화해줄 수 있어?",en:"Can you call me back later?"}]},
+  {id:9,pattern:"Do you mind ~ing?",meaning:"~하는 거 괜찮을까요?",cards:[{kr:"잠깐 기다려 주시겠어요?",en:"Do you mind waiting a moment?"},{kr:"볼륨 좀 줄여주실 수 있나요?",en:"Do you mind turning down the volume?"},{kr:"창문 열어주실 수 있나요?",en:"Do you mind opening the window?"},{kr:"나중에 다시 오실 수 있나요?",en:"Do you mind coming back later?"},{kr:"한 번 더 설명해 주실 수 있나요?",en:"Do you mind explaining again?"}]},
+  {id:10,pattern:"I'm not sure if",meaning:"~인지 확실하지 않다",cards:[{kr:"그게 맞는지 잘 모르겠어.",en:"I'm not sure if that's right."},{kr:"걔가 올 수 있는지 모르겠어.",en:"I'm not sure if she can come."},{kr:"내가 시간이 있을지 모르겠어.",en:"I'm not sure if I have time."},{kr:"그게 좋은 생각인지 모르겠어.",en:"I'm not sure if that's a good idea."},{kr:"내가 이해한 게 맞는지 모르겠어.",en:"I'm not sure if I understand correctly."}]},
+  {id:11,pattern:"I don't think",meaning:"~라고 생각하지 않는다",cards:[{kr:"나는 그게 좋은 생각인 것 같지 않아.",en:"I don't think that's a good idea."},{kr:"나는 걔가 올 것 같지 않아.",en:"I don't think he'll come."},{kr:"나는 그게 맞지 않는 것 같아.",en:"I don't think that's right."},{kr:"나는 네가 이해한 것 같지 않아.",en:"I don't think you understand."},{kr:"나는 우리가 늦을 것 같지 않아.",en:"I don't think we'll be late."}]},
+  {id:12,pattern:"I think you should",meaning:"~하는 게 좋겠어",cards:[{kr:"너 좀 쉬는 게 좋겠어.",en:"I think you should rest."},{kr:"너 걔한테 사과하는 게 좋겠어.",en:"I think you should apologize."},{kr:"너 의사한테 가보는 게 좋겠어.",en:"I think you should see a doctor."},{kr:"너 그냥 솔직하게 말하는 게 좋겠어.",en:"I think you should be honest."},{kr:"너 그 일 다시 생각해보는 게 좋겠어.",en:"I think you should reconsider."}]},
+  {id:13,pattern:"It feels like",meaning:"~처럼 느껴진다",cards:[{kr:"여름인 것처럼 느껴져.",en:"It feels like summer."},{kr:"꿈인 것 같은 느낌이야.",en:"It feels like a dream."},{kr:"시간이 엄청 빨리 가는 것 같아.",en:"It feels like time is flying."},{kr:"뭔가 잘못된 것 같은 느낌이야.",en:"It feels like something is wrong."},{kr:"오랜만인 것 같은 느낌이야.",en:"It feels like it's been a long time."}]},
+  {id:14,pattern:"It looks like",meaning:"~처럼 보인다",cards:[{kr:"비가 올 것 같아.",en:"It looks like it's going to rain."},{kr:"걔 피곤해 보여.",en:"It looks like she's tired."},{kr:"파티인 것 같은데.",en:"It looks like a party."},{kr:"좋은 식당인 것 같아.",en:"It looks like a good restaurant."},{kr:"늦을 것 같아.",en:"It looks like we'll be late."}]},
+  {id:15,pattern:"Have you ever",meaning:"~해본 적 있어?",cards:[{kr:"스카이다이빙 해본 적 있어?",en:"Have you ever gone skydiving?"},{kr:"한국 음식 먹어본 적 있어?",en:"Have you ever tried Korean food?"},{kr:"그런 실수 해본 적 있어?",en:"Have you ever made that mistake?"},{kr:"서울에 가본 적 있어?",en:"Have you ever been to Seoul?"},{kr:"그런 기분 느껴본 적 있어?",en:"Have you ever felt that way?"}]},
+  {id:16,pattern:"I used to",meaning:"예전엔 ~했었다",cards:[{kr:"나 예전에 여기 살았었어.",en:"I used to live here."},{kr:"나 예전엔 담배 피웠었어.",en:"I used to smoke."},{kr:"나 예전엔 매일 운동했었어.",en:"I used to exercise every day."},{kr:"나 예전에 그 가수 엄청 좋아했었어.",en:"I used to love that singer."},{kr:"나 예전엔 야식 자주 먹었었어.",en:"I used to eat late-night snacks a lot."}]},
+  {id:17,pattern:"Would you like",meaning:"~하시겠어요?",cards:[{kr:"더 드시겠어요?",en:"Would you like some more?"},{kr:"제가 도와드릴까요?",en:"Would you like some help?"},{kr:"뭔가 마실 것 드릴까요?",en:"Would you like something to drink?"},{kr:"같이 가시겠어요?",en:"Would you like to come along?"},{kr:"잠시 앉으시겠어요?",en:"Would you like to sit down?"}]},
+  {id:18,pattern:"I'd rather",meaning:"차라리 ~하겠다",cards:[{kr:"나 차라리 집에 있을래.",en:"I'd rather stay home."},{kr:"나 차라리 걸을래.",en:"I'd rather walk."},{kr:"나 차라리 말 안 할래.",en:"I'd rather not say."},{kr:"나 차라리 혼자 할래.",en:"I'd rather do it alone."},{kr:"나 차라리 기다릴래.",en:"I'd rather wait."}]},
+  {id:19,pattern:"I can't help",meaning:"~하지 않을 수 없다",cards:[{kr:"웃지 않을 수가 없어.",en:"I can't help laughing."},{kr:"걱정이 안 될 수가 없어.",en:"I can't help worrying."},{kr:"그 생각이 안 날 수가 없어.",en:"I can't help thinking about it."},{kr:"느끼지 않을 수가 없어.",en:"I can't help feeling that way."},{kr:"비교하지 않을 수가 없어.",en:"I can't help comparing."}]},
+  {id:20,pattern:"What if",meaning:"만약 ~라면 어떡하지?",cards:[{kr:"만약 비가 오면 어떡하지?",en:"What if it rains?"},{kr:"만약 내가 실패하면 어떡하지?",en:"What if I fail?"},{kr:"만약 걔가 안 오면 어떡하지?",en:"What if she doesn't come?"},{kr:"만약 내가 틀렸으면 어떡하지?",en:"What if I'm wrong?"},{kr:"만약 우리가 늦으면 어떡하지?",en:"What if we're late?"}]},
+  {id:21,pattern:"I wish",meaning:"~라면 좋겠다",cards:[{kr:"네가 여기 있으면 좋겠어.",en:"I wish you were here."},{kr:"내가 더 열심히 했으면 좋았을 텐데.",en:"I wish I had tried harder."},{kr:"시간이 더 있으면 좋겠어.",en:"I wish I had more time."},{kr:"내가 그걸 알았더라면 좋았을 텐데.",en:"I wish I had known that."},{kr:"더 일찍 시작했으면 좋았을 텐데.",en:"I wish I had started earlier."}]},
+  {id:22,pattern:"There's no way",meaning:"절대 ~할 수 없다",cards:[{kr:"절대 그게 맞을 리 없어.",en:"There's no way that's right."},{kr:"절대 제시간에 도착 못 해.",en:"There's no way we'll arrive on time."},{kr:"걔가 그랬을 리 없어.",en:"There's no way he did that."},{kr:"그게 진짜일 리 없어.",en:"There's no way that's real."},{kr:"절대 포기 못 해.",en:"There's no way I'm giving up."}]},
+  {id:23,pattern:"You're supposed to",meaning:"너 ~해야 돼",cards:[{kr:"너 지금 자야 해.",en:"You're supposed to be sleeping."},{kr:"너 여기 있으면 안 돼.",en:"You're not supposed to be here."},{kr:"너 먼저 물어봤어야 했어.",en:"You were supposed to ask first."},{kr:"너 오늘 일하기로 했잖아.",en:"You're supposed to work today."},{kr:"너 조용히 해야 해.",en:"You're supposed to be quiet."}]},
+  {id:24,pattern:"It's not like",meaning:"~인 것도 아니잖아",cards:[{kr:"네가 모르는 것도 아니잖아.",en:"It's not like you don't know."},{kr:"내가 안 하려는 것도 아니잖아.",en:"It's not like I don't want to."},{kr:"걔가 나쁜 사람인 것도 아니잖아.",en:"It's not like he's a bad person."},{kr:"처음인 것도 아니잖아.",en:"It's not like it's the first time."},{kr:"내가 늦은 것도 아니잖아.",en:"It's not like I was late."}]},
+  {id:25,pattern:"I ended up",meaning:"결국 ~하게 됐다",cards:[{kr:"결국 집에 있었어.",en:"I ended up staying home."},{kr:"결국 택시 탔어.",en:"I ended up taking a taxi."},{kr:"결국 그거 샀어.",en:"I ended up buying it."},{kr:"결국 혼자 먹었어.",en:"I ended up eating alone."},{kr:"결국 포기하게 됐어.",en:"I ended up giving up."}]},
+  {id:26,pattern:"I'm looking for",meaning:"~를 찾고 있어요",cards:[{kr:"화장실 찾고 있어요.",en:"I'm looking for the restroom."},{kr:"이 근처 카페 찾고 있어요.",en:"I'm looking for a cafe nearby."},{kr:"제 지갑 찾고 있어요.",en:"I'm looking for my wallet."},{kr:"좋은 식당 찾고 있어요.",en:"I'm looking for a good restaurant."},{kr:"특정 상품 찾고 있어요.",en:"I'm looking for a specific item."}]},
+  {id:27,pattern:"I'm afraid",meaning:"유감이지만 / 걱정된다",cards:[{kr:"유감이지만 그건 안 될 것 같아요.",en:"I'm afraid that won't work."},{kr:"유감이지만 자리가 없어요.",en:"I'm afraid there are no seats."},{kr:"늦을까봐 걱정돼.",en:"I'm afraid we'll be late."},{kr:"유감이지만 도와드리기 어려울 것 같아요.",en:"I'm afraid I can't help."},{kr:"실수할까봐 걱정돼.",en:"I'm afraid of making a mistake."}]},
+  {id:28,pattern:"Go ahead",meaning:"먼저 하세요 / 어서 해",cards:[{kr:"먼저 드세요.",en:"Go ahead and eat first."},{kr:"어서 말해봐.",en:"Go ahead and tell me."},{kr:"먼저 들어가세요.",en:"Go ahead and go in."},{kr:"어서 해봐.",en:"Go ahead and try it."},{kr:"먼저 주문하세요.",en:"Go ahead and order."}]},
+  {id:29,pattern:"Never mind",meaning:"됐어 / 신경 쓰지 마",cards:[{kr:"됐어, 신경 쓰지 마.",en:"Never mind, don't worry about it."},{kr:"아, 됐어.",en:"Oh, never mind."},{kr:"신경 쓰지 마, 내가 할게.",en:"Never mind, I'll do it."},{kr:"그냥 잊어버려.",en:"Never mind, just forget it."},{kr:"됐어, 중요한 거 아니야.",en:"Never mind, it's not important."}]},
+  {id:30,pattern:"I'm done",meaning:"다 했어 / 끝났어",cards:[{kr:"나 다 했어.",en:"I'm done."},{kr:"나 이제 그 사람이랑 끝났어.",en:"I'm done with him."},{kr:"나 이제 포기했어.",en:"I'm done trying."},{kr:"숙제 다 했어.",en:"I'm done with my homework."},{kr:"나 이거 더 이상 못 하겠어.",en:"I'm done with this."}]},
+];
+
+// ── Speaking topics
+const SPEAKING_TOPICS = [
+  {en:"My morning routine",kr:"나의 아침 루틴"},{en:"My favorite food and why",kr:"좋아하는 음식과 이유"},
+  {en:"A memorable trip I took",kr:"기억에 남는 여행"},{en:"My hometown",kr:"내 고향 소개"},
+  {en:"My family members",kr:"우리 가족 소개"},{en:"A typical weekend for me",kr:"전형적인 주말"},
+  {en:"My hobby and how I started it",kr:"취미와 시작 계기"},{en:"My favorite movie or TV show",kr:"좋아하는 영화/드라마"},
+  {en:"My job or what I study",kr:"직업 / 공부하는 것"},{en:"My best friend",kr:"가장 친한 친구"},
+  {en:"A funny thing that happened to me",kr:"웃겼던 일"},{en:"What I ate yesterday",kr:"어제 먹은 음식"},
+  {en:"My dream vacation",kr:"꿈의 휴가"},{en:"A challenge I overcame",kr:"극복한 어려움"},
+  {en:"My favorite season and why",kr:"좋아하는 계절"},{en:"A childhood memory",kr:"어린 시절 추억"},
+  {en:"A skill I want to learn",kr:"배우고 싶은 기술"},{en:"My ideal weekend",kr:"이상적인 주말"},
+  {en:"Technology I use every day",kr:"매일 쓰는 기술"},{en:"Something I bought recently",kr:"최근에 산 물건"},
+  {en:"A person I admire",kr:"존경하는 사람"},{en:"My goals for this year",kr:"올해 목표"},
+  {en:"My favorite music or artist",kr:"좋아하는 음악/가수"},{en:"A habit I want to change",kr:"고치고 싶은 습관"},
+  {en:"My favorite restaurant",kr:"좋아하는 식당"},{en:"What I did last weekend",kr:"지난 주말에 한 일"},
+  {en:"My opinion on exercise and health",kr:"운동과 건강에 대한 생각"},
+  {en:"My favorite place to relax",kr:"쉬기 좋은 장소"},
+  {en:"My goals for this year",kr:"올해 나의 목표"},
+  {en:"My morning and evening routines",kr:"나의 아침/저녁 루틴"},
+];
+const FILLERS = ["Well...","You know,","I mean,","Actually,","Let me think...","How can I say...","The thing is,","To be honest,","For example,","Anyway,","So basically,","Come to think of it,"];
+
+// ════════════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════════════
+let state = {
+  completedG: JSON.parse(localStorage.getItem('uni_cg') || '{}'),
+  completedM: JSON.parse(localStorage.getItem('uni_cm') || '{}'),
+  completedP: JSON.parse(localStorage.getItem('uni_cp') || '[]'),
+  bookmarksG: JSON.parse(localStorage.getItem('uni_bg') || '{}'),
+  bookmarksM: JSON.parse(localStorage.getItem('uni_bm') || '{}'),
+  currentTab: 'home',
+  // Chapter view state
+  chapterView: null, // { type:'gyeollon'|'mouse', chIdx, sentIdx, mode:'card'|'list'|'vocab'|'quiz', revealed:false }
+  patternView: null, // { dayIdx, cardIdx, flipped, mode:'kr'|'en' }
+  timer: { remaining:300, total:300, running:false, id:null },
+  speakingTopic: null,
+};
+function save() {
+  localStorage.setItem('uni_cg', JSON.stringify(state.completedG));
+  localStorage.setItem('uni_cm', JSON.stringify(state.completedM));
+  localStorage.setItem('uni_cp', JSON.stringify(state.completedP));
+  localStorage.setItem('uni_bg', JSON.stringify(state.bookmarksG));
+  localStorage.setItem('uni_bm', JSON.stringify(state.bookmarksM));
+}
+
+// ════════════════════════════════════════════════════════
+// ROUTING / TABS
+// ════════════════════════════════════════════════════════
+function switchTab(tab) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-'+tab).classList.add('active');
+  document.getElementById('nav-'+tab).classList.add('active');
+  state.currentTab = tab;
+  if (tab === 'home') renderHome();
+  else if (tab === 'gyeollon') renderGyeollonList();
+  else if (tab === 'mouse') renderMouseList();
+  else if (tab === 'pattern') renderPatternHome();
+  else if (tab === 'speaking') renderSpeakingPage();
+}
+function openApp(app) { switchTab(app); }
+function goHome() {
+  // Reset chapter/pattern view if open
+  state.chapterView = null;
+  state.patternView = null;
+  switchTab('home');
+}
+
+// ════════════════════════════════════════════════════════
+// HOME
+// ════════════════════════════════════════════════════════
+function getGyeollonStats() {
+  const total = GYEOLLON_CHAPTERS.reduce((a,c)=>a+c.sentences.length,0);
+  const done = Object.keys(state.completedG).length;
+  return {total, done, pct: total ? Math.round(done/total*100) : 0};
+}
+function getMouseStats() {
+  const total = MOUSE_CHAPTERS.reduce((a,c)=>a+c.sentences.length,0);
+  const done = Object.keys(state.completedM).length;
+  return {total, done, pct: total ? Math.round(done/total*100) : 0};
+}
+function getPatternStats() {
+  const done = state.completedP.length;
+  return {done, pct: Math.round(done/30*100)};
+}
+function renderHome() {
+  const g = getGyeollonStats(), m = getMouseStats(), p = getPatternStats();
+  const totalSent = g.total + m.total;
+  const doneSent = g.done + m.done;
+  const overallPct = totalSent ? Math.round((doneSent/totalSent)*100) : 0;
+
+  document.getElementById('home-total-sent').textContent = totalSent;
+  document.getElementById('home-done-sent').textContent = doneSent;
+  document.getElementById('home-pattern-done').textContent = p.done;
+  document.getElementById('home-total-pct').textContent = overallPct+'%';
+
+  document.getElementById('home-gyeollon-pct').textContent = g.pct+'%';
+  document.getElementById('home-gyeollon-bar').style.width = g.pct+'%';
+  document.getElementById('home-gyeollon-desc').textContent = `${g.done}/${g.total} 문장 완료`;
+  document.getElementById('home-mouse-pct').textContent = m.pct+'%';
+  document.getElementById('home-mouse-bar').style.width = m.pct+'%';
+  document.getElementById('home-mouse-desc').textContent = `${m.done}/${m.total} 문장 완료`;
+  document.getElementById('home-pattern-pct').textContent = p.pct+'%';
+  document.getElementById('home-pattern-bar').style.width = p.pct+'%';
+  const nextDay = state.completedP.length > 0 ? Math.min(Math.max(...state.completedP)+1,30) : 1;
+  document.getElementById('home-pattern-desc').textContent = `오늘: Day ${nextDay} — ${PATTERNS[nextDay-1].pattern}`;
+  document.getElementById('home-speaking-desc').textContent = state.speakingTopic ? `주제: ${state.speakingTopic.en}` : '랜덤 주제로 5분 말하기';
+}
+
+// ════════════════════════════════════════════════════════
+// CHAPTER LIST (공통)
+// ════════════════════════════════════════════════════════
+function renderChapterList(type, chapters, completedObj, container, badgeEl) {
+  const totalDone = Object.keys(completedObj).length;
+  const totalSent = chapters.reduce((a,c)=>a+c.sentences.length,0);
+  badgeEl.textContent = `${totalDone}/${totalSent}`;
+
+  let html = '<div class="chapter-list-scroll"><div class="ch-grid">';
+  chapters.forEach((ch, ci) => {
+    const chDone = ch.sentences.filter((_,si) => completedObj[`${ci}-${si}`]).length;
+    const chPct = Math.round(chDone/ch.sentences.length*100);
+    const done100 = chPct===100;
+    html += `<div class="ch-card ${done100?'done':''}" onclick="${type}OpenChapter(${ci})">
+      <div class="ch-label">${ch.label}</div>
+      <div class="ch-info">
+        <div class="ch-title">${ch.title}</div>
+        <div class="ch-sub">${ch.subtitle}</div>
+      </div>
+      <div class="ch-right">
+        ${done100 ? '<div class="ch-done-badge">✓</div>' : `<div class="ch-pct">${chPct}%</div><div class="ch-pbar"><div class="ch-pfill" style="width:${chPct}%"></div></div>`}
+      </div>
+    </div>`;
+  });
+  html += '</div></div>';
+  container.innerHTML = html;
+}
+
+function gyeollonOpenChapter(ci) {
+  state.chapterView = {type:'gyeollon', chIdx:ci, sentIdx:0, mode:'card', revealed:false};
+  renderChapterStudy();
+}
+function mouseOpenChapter(ci) {
+  state.chapterView = {type:'mouse', chIdx:ci, sentIdx:0, mode:'card', revealed:false};
+  renderChapterStudy();
+}
+
+function renderGyeollonList() {
+  renderChapterList('gyeollon', GYEOLLON_CHAPTERS, state.completedG,
+    document.getElementById('gyeollon-content'),
+    document.getElementById('gyeollon-badge'));
+}
+function renderMouseList() {
+  renderChapterList('mouse', MOUSE_CHAPTERS, state.completedM,
+    document.getElementById('mouse-content'),
+    document.getElementById('mouse-badge'));
+}
+
+// ════════════════════════════════════════════════════════
+// CHAPTER STUDY
+// ════════════════════════════════════════════════════════
+function getChapterData() {
+  const cv = state.chapterView;
+  const chapters = cv.type === 'gyeollon' ? GYEOLLON_CHAPTERS : MOUSE_CHAPTERS;
+  const completed = cv.type === 'gyeollon' ? state.completedG : state.completedM;
+  const bookmarks = cv.type === 'gyeollon' ? state.bookmarksG : state.bookmarksM;
+  return { ch: chapters[cv.chIdx], chapters, completed, bookmarks };
+}
+function renderChapterStudy() {
+  const cv = state.chapterView;
+  const {ch} = getChapterData();
+  const container = document.getElementById(cv.type === 'gyeollon' ? 'gyeollon-content' : 'mouse-content');
+
+  let modesHtml = `<div class="mode-bar">
+    ${['card','list','vocab','quiz'].map(m=>`<button class="mode-pill ${cv.mode===m?'active':''}" onclick="chSetMode('${m}')">${{card:'카드',list:'전체',vocab:'표현',quiz:'퀴즈'}[m]}</button>`).join('')}
+  </div>`;
+
+  let bodyHtml = '';
+  if (cv.mode === 'card') bodyHtml = renderCardMode(ch);
+  else if (cv.mode === 'list') bodyHtml = renderListMode(ch);
+  else if (cv.mode === 'vocab') bodyHtml = renderVocabMode(ch);
+  else if (cv.mode === 'quiz') bodyHtml = renderQuizMode(ch);
+
+  container.innerHTML = `
+    <div class="inner-header" style="position:sticky;top:0;z-index:50;background:var(--bg);flex-shrink:0;display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border)">
+      <button class="back-btn" onclick="${cv.type==='gyeollon'?'renderGyeollonList()':'renderMouseList()'}">←</button>
+      <span style="flex:1;font-size:14px;font-weight:700;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${ch.label} — ${ch.title}</span>
+      <span style="font-size:10px;color:var(--text3);font-family:'JetBrains Mono',monospace;flex-shrink:0">${cv.sentIdx+1}/${ch.sentences.length}</span>
+    </div>
+    ${modesHtml}
+    <div class="study-body fade-in" id="study-body">${bodyHtml}</div>
+  `;
+}
+
+function renderCardMode(ch) {
+  const cv = state.chapterView;
+  const {completed, bookmarks} = getChapterData();
+  const s = ch.sentences[cv.sentIdx];
+  const key = `${cv.chIdx}-${cv.sentIdx}`;
+  const isDone = !!completed[key];
+  const isBm = !!bookmarks[key];
+
+  let enHtml = cv.revealed ? `<div class="flash-en-wrap"><div class="flash-en" id="flashEnText">${s.en}</div><div style="display:flex;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap">${isDone?'<div style="font-size:11px;color:var(--green)">✓ 완료</div>':''}<button class="tts-btn" onclick="event.stopPropagation();speak(document.getElementById('flashEnText').innerText, this)">🔊 듣기</button></div></div>` : `<button class="flash-reveal-btn" onclick="chReveal()">▶ 영어로 보기</button>`;
+
+  return `
+    <div class="flash-inner ${isDone?'revealed':''}" ${!cv.revealed?'onclick="chReveal()"':''}>
+      <span class="flash-counter">${cv.sentIdx+1} / ${ch.sentences.length}</span>
+      <button class="flash-bm ${isBm?'active':''}" onclick="chToggleBm(event,'${key}')">${isBm?'★':'☆'}</button>
+      <div class="flash-kr" style="margin-top:8px">${s.kr}</div>
+      ${enHtml}
+    </div>
+    <div class="card-nav" style="margin-top:14px">
+      <button class="cnav-btn" onclick="chPrev()" ${cv.sentIdx===0?'disabled':''}>← 이전</button>
+      <button class="cnav-btn primary" onclick="chNext()" ${cv.sentIdx===ch.sentences.length-1?'disabled':''}>다음 →</button>
+      <span class="cnav-txt">${cv.sentIdx+1}/${ch.sentences.length}</span>
+    </div>`;
+}
+
+function renderListMode(ch) {
+  const {completed, bookmarks} = getChapterData();
+  let rows = ch.sentences.map((s,i) => {
+    const key = `${state.chapterView.chIdx}-${i}`;
+    const done = !!completed[key];
+    const plainEn = s.en.replace(/<[^>]+>/g,'');
+    return `<tr>
+      <td class="list-num" style="${done?'color:var(--green)':''}">${done?'✓':String(i+1).padStart(2,'0')}</td>
+      <td class="list-kr">${s.kr}</td>
+      <td class="list-en" style="vertical-align:middle">${s.en}<br><button class="tts-btn small" style="margin-top:6px" onclick="speak('${plainEn.replace(/'/g,"\\'")}', this)">🔊 듣기</button></td>
+    </tr>`;
+  }).join('');
+  return `<table class="list-table"><thead><tr><th>#</th><th>한국어</th><th>English</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+function renderVocabMode(ch) {
+  return `<div class="vocab-grid">${ch.vocab.map(v=>`<div class="vocab-card">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:6px;margin-bottom:4px">
+      <div class="v-en">${v.en}</div>
+      <button class="tts-btn small" onclick="speak('${v.en.replace(/'/g,"\\'")}', this)">🔊</button>
+    </div>
+    <div class="v-kr">${v.kr}</div>
+    <div class="v-ex">"${v.ex}"</div>
+    <button class="tts-btn small" style="margin-top:8px;width:100%" onclick="speak('${v.ex.replace(/'/g,"\\'")}', this)">🔊 예문 듣기</button>
+  </div>`).join('')}</div>`;
+}
+
+function renderQuizMode(ch) {
+  const cv = state.chapterView;
+  const s = ch.sentences[cv.sentIdx];
+  const plain = s.en.replace(/<[^>]+>/g,'');
+  const words = plain.split(' ');
+  const hint = words.slice(0,2).join(' ')+'...';
+  return `
+    <div class="quiz-card">
+      <div class="quiz-label">Quiz ${cv.sentIdx+1} / ${ch.sentences.length} — 한국어 → 영어</div>
+      <div class="quiz-kr">${s.kr}</div>
+      <div class="quiz-hint">힌트: ${hint}</div>
+      <div style="margin-top:14px">
+        <input class="quiz-input" id="qInput" placeholder="영어 문장을 입력하세요..." onkeydown="if(event.key==='Enter')chCheck()" />
+      </div>
+      <div class="quiz-result" id="qResult"><div id="qResText"></div><div class="answer-text" id="qAnsText"></div><button class="tts-btn small" id="qTtsBtn" style="margin-top:8px;display:none" onclick="speak(document.getElementById('qAnsText').textContent.replace('정답: ',''),this)">🔊 정답 듣기</button></div>
+      <div class="quiz-btns">
+        <button class="quiz-check" onclick="chCheck()">✓ 확인</button>
+        <button class="quiz-ans-btn" onclick="chShowAns('${encodeURIComponent(plain)}')">정답 보기</button>
+      </div>
+    </div>
+    <div class="card-nav" style="margin-top:0">
+      <button class="cnav-btn" onclick="chPrevQuiz()" ${cv.sentIdx===0?'disabled':''}>← 이전</button>
+      <button class="cnav-btn primary" onclick="chNextQuiz()" ${cv.sentIdx===ch.sentences.length-1?'disabled':''}>다음 →</button>
+      <span class="cnav-txt">${cv.sentIdx+1}/${ch.sentences.length}</span>
+    </div>`;
+}
+
+// Chapter actions
+function chSetMode(m) { state.chapterView.mode = m; state.chapterView.revealed = false; state.chapterView.sentIdx = 0; renderChapterStudy(); }
+function chReveal() {
+  state.chapterView.revealed = true;
+  const {ch} = getChapterData();
+  const cv = state.chapterView;
+  const key = `${cv.chIdx}-${cv.sentIdx}`;
+  const completed = cv.type==='gyeollon' ? state.completedG : state.completedM;
+  completed[key] = true;
+  save();
+  renderChapterStudy();
+}
+function chPrev() { if(state.chapterView.sentIdx>0){state.chapterView.sentIdx--;state.chapterView.revealed=false;renderChapterStudy();} }
+function chNext() {
+  const {ch} = getChapterData();
+  if(state.chapterView.sentIdx<ch.sentences.length-1){state.chapterView.sentIdx++;state.chapterView.revealed=false;renderChapterStudy();}
+}
+function chToggleBm(e, key) {
+  e.stopPropagation();
+  const bm = state.chapterView.type==='gyeollon' ? state.bookmarksG : state.bookmarksM;
+  if(bm[key]) delete bm[key]; else bm[key]=true;
+  save(); renderChapterStudy();
+}
+function chCheck() {
+  const cv = state.chapterView;
+  const {ch, completed} = getChapterData();
+  const s = ch.sentences[cv.sentIdx];
+  const ans = s.en.replace(/<[^>]+>/g,'').toLowerCase().trim();
+  const inp = document.getElementById('qInput');
+  if(!inp||!inp.value.trim()) return;
+  const userVal = inp.value.toLowerCase().trim();
+  const words = ans.split(/\s+/).filter(w=>w.length>2);
+  const score = words.filter(w=>userVal.includes(w.replace(/[.,!?]/g,''))).length / words.length;
+  const res = document.getElementById('qResult');
+  const key = `${cv.chIdx}-${cv.sentIdx}`;
+  res.style.display='block';
+  if(score>=0.55){
+    res.className='quiz-result correct';
+    document.getElementById('qResText').textContent='✓ 잘 했어요!';
+    document.getElementById('qAnsText').textContent='정답: '+ans;
+    const ttsBtn = document.getElementById('qTtsBtn');
+    if (ttsBtn) ttsBtn.style.display='inline-flex';
+    completed[key]=true; save();
+  } else {
+    res.className='quiz-result wrong';
+    document.getElementById('qResText').textContent='✗ 다시 도전해 보세요.';
+  }
+  document.getElementById('qAnsText').textContent = '정답: '+ans;
+}
+function chShowAns(enc) {
+  const res = document.getElementById('qResult');
+  res.style.display='block';res.className='quiz-result correct';
+  document.getElementById('qResText').textContent='정답';
+  document.getElementById('qAnsText').textContent='정답: '+decodeURIComponent(enc);
+  const ttsBtn = document.getElementById('qTtsBtn');
+  if (ttsBtn) ttsBtn.style.display='inline-flex';
+}
+function chPrevQuiz() { if(state.chapterView.sentIdx>0){state.chapterView.sentIdx--;renderChapterStudy();} }
+function chNextQuiz() {
+  const {ch} = getChapterData();
+  if(state.chapterView.sentIdx<ch.sentences.length-1){state.chapterView.sentIdx++;renderChapterStudy();}
+}
+
+// ════════════════════════════════════════════════════════
+// PATTERN 30
+// ════════════════════════════════════════════════════════
+function renderPatternHome() {
+  const done = state.completedP.length;
+  const pct = Math.round(done/30*100);
+  const nextDayIdx = done > 0 ? Math.min(Math.max(...state.completedP), 29) : 0;
+  const todayP = PATTERNS[nextDayIdx];
+
+  let listHtml = PATTERNS.map((p,i) => {
+    const isDone = state.completedP.includes(i+1);
+    return `<div class="pat-day-item ${isDone?'completed':''}" onclick="patStartDay(${i})">
+      <div class="pat-day-num">DAY ${p.id}</div>
+      <div style="flex:1">
+        <div class="pat-day-pattern">${p.pattern}</div>
+        <div class="pat-day-meaning">${p.meaning}</div>
+      </div>
+      ${isDone?'<div class="pat-done-badge">✓</div>':''}
+    </div>`;
+  }).join('');
+
+  document.getElementById('pattern-content').innerHTML = `
+    <div class="pattern-home fade-in">
+      <div class="pat-hero" onclick="patStartDay(${nextDayIdx})">
+        <div class="pat-eyebrow">TODAY · DAY ${todayP.id}</div>
+        <div class="pat-hero-pattern">${todayP.pattern}</div>
+        <div class="pat-hero-meaning">${todayP.meaning}</div>
+        <div class="pat-hero-start">시작하기 →</div>
+      </div>
+      <div class="pat-stats">
+        <div class="pat-stat cyan"><div class="pat-stat-num">${done}</div><div class="pat-stat-lbl">완료</div></div>
+        <div class="pat-stat purple"><div class="pat-stat-num">${30-done}</div><div class="pat-stat-lbl">남음</div></div>
+        <div class="pat-stat gold"><div class="pat-stat-num">${pct}%</div><div class="pat-stat-lbl">진행률</div></div>
+      </div>
+      <div class="pat-prog-bar"><div class="pat-prog-fill" style="width:${pct}%"></div></div>
+      <div class="pat-day-list">${listHtml}</div>
+    </div>`;
+}
+
+function patStartDay(dayIdx) {
+  state.patternView = {dayIdx, cardIdx:0, flipped:false, mode:'kr'};
+  renderPatternStudy();
+}
+
+function renderPatternStudy() {
+  const pv = state.patternView;
+  const p = PATTERNS[pv.dayIdx];
+  const card = p.cards[pv.cardIdx];
+  const isDone = state.completedP.includes(p.id);
+
+  const frontText = pv.mode==='kr' ? card.kr : card.en;
+  const backText = pv.mode==='kr' ? card.en : card.kr;
+
+  document.getElementById('pattern-content').innerHTML = `
+    <div style="display:flex;flex-direction:column;height:100%;overflow:hidden">
+      <div class="inner-header" style="flex-shrink:0;display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border);background:var(--bg)">
+        <button class="back-btn" onclick="renderPatternHome()">←</button>
+        <div style="flex:1">
+          <div style="font-size:10px;letter-spacing:0.15em;color:var(--cyan);text-transform:uppercase;margin-bottom:2px">DAY ${p.id}</div>
+          <div style="font-size:14px;font-weight:900;color:var(--cyan)">${p.pattern}</div>
+        </div>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3)">${pv.cardIdx+1}/${p.cards.length}</span>
+      </div>
+      <div class="pat-study-wrap">
+        <div class="pat-mode-toggle">
+          <button class="pat-mode-btn ${pv.mode==='kr'?'active':''}" onclick="patSetMode('kr')">🇰🇷 → 🇺🇸</button>
+          <button class="pat-mode-btn ${pv.mode==='en'?'active':''}" onclick="patSetMode('en')">🇺🇸 → 🇰🇷</button>
+        </div>
+        <div class="pat-card ${pv.flipped?'flipped':''}" onclick="patFlip()">
+          <div class="pat-card-hint">${pv.mode==='kr'?'한국어':'ENGLISH'}</div>
+          <div class="pat-card-kr">${frontText}</div>
+          <div class="pat-card-en">${backText}</div>
+          ${!pv.flipped?'<div class="pat-tap">탭하여 뒤집기 👆</div>':'<button class="tts-btn" style="margin-top:14px" onclick="event.stopPropagation();speak(\''+( pv.mode==='kr' ? backText : frontText ).replace(/\'/g,"\\'")+'\',this)">🔊 듣기</button>'}
+        </div>
+        <div class="pat-nav">
+          <button class="pat-prev" onclick="patPrev()" ${pv.cardIdx===0?'disabled':''}>←</button>
+          <button class="pat-next" onclick="patNext()">${pv.cardIdx===p.cards.length-1 ? (isDone?'✓ 완료':'완료하기 🎉') : '다음 →'}</button>
+        </div>
+        ${isDone?'<div style="text-align:center;font-size:12px;color:var(--cyan);padding:8px 0">✓ 이미 완료된 날이에요!</div>':''}
+      </div>
+    </div>`;
+}
+
+function patFlip() { state.patternView.flipped = !state.patternView.flipped; renderPatternStudy(); }
+function patSetMode(m) { state.patternView.mode = m; state.patternView.flipped = false; renderPatternStudy(); }
+function patPrev() { if(state.patternView.cardIdx>0){state.patternView.cardIdx--;state.patternView.flipped=false;renderPatternStudy();} }
+function patNext() {
+  const pv = state.patternView;
+  const p = PATTERNS[pv.dayIdx];
+  if(pv.cardIdx < p.cards.length-1) {
+    pv.cardIdx++; pv.flipped=false; renderPatternStudy();
+  } else {
+    if(!state.completedP.includes(p.id)){state.completedP.push(p.id);save();}
+    renderPatternHome();
+    renderHome();
+  }
+}
+
+// ════════════════════════════════════════════════════════
+// SPEAKING
+// ════════════════════════════════════════════════════════
+function renderSpeakingPage() {
+  const t = state.speakingTopic || {en:'(주제를 선택해주세요)',kr:''};
+  const tm = state.timer;
+
+  let topicGrid = SPEAKING_TOPICS.map((tp,i)=>`
+    <div class="topic-item" onclick="spkSetTopic(${i})">
+      <span class="t-num">${String(i+1).padStart(2,'0')}</span>
+      <div class="t-en">${tp.en}</div>
+      <div class="t-kr">${tp.kr}</div>
+    </div>`).join('');
+
+  let fillerChips = FILLERS.map(f=>`<span class="filler-chip" onclick="spkSpeak('${f}')">${f}</span>`).join('');
+
+  document.getElementById('speaking-content').innerHTML = `
+    <div class="speaking-page fade-in">
+      <div class="spk-timer-sec">
+        <div class="spk-timer ${tm.remaining<=30&&tm.remaining>0?'warning pulse':''}" id="spkTimer">${fmtTime(tm.remaining)}</div>
+        <div class="spk-prog-bar"><div class="spk-prog-fill" id="spkProg" style="width:${(tm.total-tm.remaining)/tm.total*100}%"></div></div>
+        <div class="spk-btns">
+          <button class="spk-btn success" onclick="spkStart()">▶ 시작</button>
+          <button class="spk-btn outline" onclick="spkPause()">⏸ 일시정지</button>
+          <button class="spk-btn danger" onclick="spkReset()">↺ 초기화</button>
+        </div>
+      </div>
+
+      <div class="spk-topic-card">
+        <div class="spk-topic-lbl">🎯 TODAY'S TOPIC</div>
+        <div class="spk-topic-en" id="spkTopicEn">${t.en}</div>
+        <div class="spk-topic-kr" id="spkTopicKr">${t.kr}</div>
+        <div class="spk-topic-btns">
+          <button class="spk-topic-btn primary" onclick="spkRandom()">🎲 랜덤</button>
+          <button class="spk-topic-btn" onclick="speak(document.getElementById('spkTopicEn').textContent, this)">🔊 듣기</button>
+          <button class="spk-topic-btn" onclick="spkGenScript()">📝 스크립트 생성</button>
+        </div>
+      </div>
+
+      <div id="spkScriptDisplay" class="script-display"></div>
+
+      <div class="spk-fillers">
+        <div class="spk-filler-title">💬 필러 표현 (탭하면 발음)</div>
+        <div class="filler-chips">${fillerChips}</div>
+      </div>
+
+      <div class="spk-topic-list">
+        <div class="spk-topic-list-title">📋 주제 목록 (${SPEAKING_TOPICS.length}개)</div>
+        <div class="topic-grid">${topicGrid}</div>
+      </div>
+    </div>`;
+}
+
+function spkSetTopic(i) {
+  state.speakingTopic = SPEAKING_TOPICS[i];
+  document.getElementById('spkTopicEn').textContent = state.speakingTopic.en;
+  document.getElementById('spkTopicKr').textContent = state.speakingTopic.kr;
+  document.getElementById('spkScriptDisplay').style.display='none';
+}
+function spkRandom() {
+  spkSetTopic(Math.floor(Math.random()*SPEAKING_TOPICS.length));
+}
+// ════════════════════════════════════════════════════════
+// TTS (Text-to-Speech) 공통 함수
+// ════════════════════════════════════════════════════════
+let _ttsUtterance = null;
+let _ttsBtnEl = null;
+
+function speak(text, btnEl) {
+  if (!('speechSynthesis' in window)) { alert('이 브라우저는 음성 지원이 안 됩니다.'); return; }
+  // Stop if already speaking
+  if (speechSynthesis.speaking) {
+    speechSynthesis.cancel();
+    if (_ttsBtnEl) { _ttsBtnEl.classList.remove('speaking'); _ttsBtnEl.textContent = '🔊 듣기'; }
+    if (_ttsBtnEl === btnEl) { _ttsBtnEl = null; return; } // toggle off
+  }
+  // Clean HTML tags
+  const clean = text.replace(/<[^>]+>/g, '').trim();
+  const u = new SpeechSynthesisUtterance(clean);
+  u.lang = 'en-US'; u.rate = 0.88; u.pitch = 1.0;
+  // Prefer a native English voice if available
+  const voices = speechSynthesis.getVoices();
+  const enVoice = voices.find(v => v.lang.startsWith('en') && v.localService) || voices.find(v => v.lang.startsWith('en'));
+  if (enVoice) u.voice = enVoice;
+  _ttsBtnEl = btnEl || null;
+  if (btnEl) { btnEl.classList.add('speaking'); btnEl.textContent = '⏹ 정지'; }
+  u.onend = u.onerror = () => {
+    if (_ttsBtnEl) { _ttsBtnEl.classList.remove('speaking'); _ttsBtnEl.textContent = '🔊 듣기'; }
+    _ttsBtnEl = null;
+  };
+  _ttsUtterance = u;
+  speechSynthesis.speak(u);
+}
+function speakById(elId, btnEl) {
+  const el = document.getElementById(elId);
+  if (el) speak(el.innerText || el.textContent, btnEl);
+}
+
+function spkSpeak(text) { speak(text); }
+function fmtTime(s) { return `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`; }
+
+function spkStart() {
+  if(state.timer.running) return;
+  state.timer.running = true;
+  state.timer.id = setInterval(()=>{
+    if(state.timer.remaining>0){
+      state.timer.remaining--;
+      const el = document.getElementById('spkTimer');
+      const pg = document.getElementById('spkProg');
+      if(el) { el.textContent = fmtTime(state.timer.remaining); if(state.timer.remaining<=30){el.classList.add('warning','pulse');}else{el.classList.remove('warning','pulse');} }
+      if(pg) pg.style.width = (state.timer.total-state.timer.remaining)/state.timer.total*100+'%';
+    } else {
+      clearInterval(state.timer.id); state.timer.running=false;
+      const el = document.getElementById('spkTimer');
+      if(el){el.textContent='DONE!';el.style.color='var(--green)';el.classList.remove('pulse');}
+      spkSpeak('Great job! You made it!');
+    }
+  }, 1000);
+}
+function spkPause() { clearInterval(state.timer.id); state.timer.running=false; }
+function spkReset() {
+  clearInterval(state.timer.id); state.timer.running=false;
+  state.timer.remaining=state.timer.total;
+  const el=document.getElementById('spkTimer'); const pg=document.getElementById('spkProg');
+  if(el){el.textContent=fmtTime(state.timer.remaining);el.classList.remove('warning','pulse');el.style.color='';}
+  if(pg) pg.style.width='0%';
+}
+function spkGenScript() {
+  const t = state.speakingTopic;
+  if(!t||t.en.includes('선택')){alert('먼저 주제를 선택해주세요!');return;}
+
+  // 주제별 구체적인 내용 데이터
+  const TOPIC_DATA = {
+    "My morning routine": {
+      details: [
+        {what:"I wake up at 6:30 every morning. First, I drink a glass of water. Then I wash my face with cold water. It helps me wake up fast.",
+         past:"Before, I woke up very late. I always missed breakfast. I felt tired all day.",
+         now:"Now I have a good routine. I eat eggs and rice every morning. I feel much better.",
+         people:"My wife wakes up earlier than me. She makes coffee for both of us. My child sleeps until 8.",
+         end:"A good morning makes my whole day better. I really believe this now."},
+        {what:"My alarm goes off at 6. I hit snooze once — just once! Then I do 10 minutes of stretching. After that, I take a shower.",
+         past:"When I was in school, I never had a routine. I just woke up and ran out the door.",
+         now:"These days, I try to read for 15 minutes every morning. It helps me think more clearly at work.",
+         people:"My coworker told me he wakes up at 5 AM. I think that is too early for me. Everyone is different.",
+         end:"My morning routine is simple. But it helps me start the day with energy."},
+        {what:"The first thing I do is check my phone. I know it is a bad habit. But I can not stop yet. After that, I make coffee.",
+         past:"I used to skip breakfast all the time. I thought I was saving time. But I was always hungry by 10 AM.",
+         now:"Now I try to eat something small every morning. Even just a banana or some bread.",
+         people:"My friend has a very strict morning routine. She even meditates for 20 minutes. I admire her.",
+         end:"I want to improve my morning routine more. Small steps every day."}
+      ]
+    },
+    "My favorite food and why": {
+      details: [
+        {what:"My favorite food is samgyeopsal. It is Korean grilled pork belly. I love the smell when it is cooking. It makes me so happy.",
+         past:"When I was a kid, my favorite food was ramen. I ate it almost every day. My mom was not happy about that.",
+         now:"Now I enjoy more variety. But samgyeopsal is still number one for me.",
+         people:"My wife prefers chicken over pork. We always argue about what to order. In the end, we get both.",
+         end:"Food is more than just eating. It brings people together. That is why I love samgyeopsal."},
+        {what:"I love sushi. Every time I am stressed, I want to eat sushi. The fresh fish, the soft rice — it is perfect.",
+         past:"I did not like raw fish when I was young. I thought it was strange. My dad introduced it to me slowly.",
+         now:"Now I can eat all kinds of sushi. My favorite is salmon. I could eat it every single day.",
+         people:"Some of my friends do not like sushi at all. They say it smells. But I think the smell is wonderful.",
+         end:"Everyone has a comfort food. Mine is sushi. It always makes me feel better."},
+        {what:"My favorite food is my mom's doenjang jjigae. It is soybean paste stew. No restaurant can make it the same way.",
+         past:"I never appreciated it when I was young. I wanted pizza or fried chicken instead.",
+         now:"Now when I go to my parents' house, I always ask for it. It tastes like home.",
+         people:"My friends think it is just a simple dish. But for me, it holds so many memories.",
+         end:"The best food is not always fancy. Sometimes the simplest food is the most special."}
+      ]
+    },
+    "My job or what I study": {
+      details: [
+        {what:"I work in sales. I sell meat products to restaurants and companies. Every day is different. I meet many kinds of people.",
+         past:"When I started this job, I did not know anything. I was nervous before every meeting. I made many mistakes.",
+         now:"Now I feel more confident. I know my products well. I know what my clients need.",
+         people:"My team is small but strong. We help each other a lot. Good teamwork makes everything easier.",
+         end:"Sales is not easy. But I feel proud when I close a deal. It makes all the hard work worth it."},
+        {what:"My job involves visiting clients and building relationships. I drive a lot every day. Sometimes I visit 4 or 5 places in one day.",
+         past:"I thought sales was just about talking. But it is actually about listening. I learned that the hard way.",
+         now:"These days, I prepare well before every meeting. I research the client first. It makes a big difference.",
+         people:"My clients are busy people. They do not have much time. So I always get to the point quickly.",
+         end:"I enjoy my job because I meet interesting people every day. No two days are the same."},
+        {what:"I work at a food import company. We import meat from other countries. My job is to find new customers and keep old ones happy.",
+         past:"The meat industry is very competitive. When I first started, I lost many deals. It was frustrating.",
+         now:"Now I understand the market better. I know the prices, the trends, the competition.",
+         people:"My boss gives me a lot of freedom. I appreciate that. It helps me do my best work.",
+         end:"I want to grow more in this industry. There is always something new to learn."}
+      ]
+    },
+    "A memorable trip I took": {
+      details: [
+        {what:"The most memorable trip I took was to Osaka, Japan. I went with my family. We stayed for 5 days. It was amazing.",
+         past:"Before that trip, I had never been to Japan. I was excited but also nervous. I did not speak Japanese at all.",
+         now:"Now I want to go back every year. Japan has so many good things — food, culture, shopping.",
+         people:"My child loved the trip the most. The theme parks were a huge hit. Seeing her smile made everything perfect.",
+         end:"That trip gave me so many good memories. Travel is one of the best things you can spend money on."},
+        {what:"I once took a road trip with my friends along the Korean coast. We drove for 3 days. We stopped wherever looked interesting.",
+         past:"We did not plan much. We just drove and figured it out. Some people think that is stressful. For us, it was fun.",
+         now:"Looking back, it was one of the best decisions we made. No plan, just freedom.",
+         people:"There were 4 of us in the car. We laughed and argued and laughed again. Good friends make any trip great.",
+         end:"I think everyone should take a spontaneous trip at least once. You learn a lot about yourself."},
+        {what:"My most memorable trip was to Jeju Island for my honeymoon. The nature there is so beautiful. I was completely relaxed.",
+         past:"I had visited Jeju as a child. But seeing it as an adult was totally different. Everything felt fresh.",
+         now:"My wife and I still talk about that trip. The seafood, the beaches, the hiking — all perfect.",
+         people:"The locals in Jeju are very friendly. One grandfather gave us free tangerines from his farm. So kind.",
+         end:"Jeju will always have a special place in my heart. I hope to go back someday with my whole family."}
+      ]
+    },
+    "My best friend": {
+      details: [
+        {what:"My best friend's name is Junho. We have known each other since middle school. That is more than 20 years. He knows everything about me.",
+         past:"We met on the first day of school. We sat next to each other by accident. And we never stopped talking.",
+         now:"We do not see each other every day now. We are both busy with work and family. But when we meet, it feels the same.",
+         people:"My wife sometimes jokes that Junho knows me better than she does. She might be right.",
+         end:"A true friend is hard to find. I am lucky to have Junho. He makes my life better."},
+        {what:"My best friend and I have been through a lot together. We supported each other during hard times. That is what real friendship means.",
+         past:"There was a time when we had a big fight. We did not talk for two months. It was painful.",
+         now:"Now we are closer than ever. That fight actually made our friendship stronger. We communicate better now.",
+         people:"My other friends are good too. But my best friend is different. There is a deeper trust there.",
+         end:"Friendship takes work. But it is worth it. I try to be a good friend every day."}
+      ]
+    },
+    "My hobby and how I started it": {
+      details: [
+        {what:"My hobby is stock investing. I find it really interesting. I like reading about companies and the economy. It is like solving a puzzle.",
+         past:"I started investing about 3 years ago. At first, I lost money. I did not know what I was doing. It was a tough lesson.",
+         now:"Now I do more research before I invest. I am more patient. I think long term instead of short term.",
+         people:"My wife is more conservative with money than me. She worries sometimes. But I try to invest wisely.",
+         end:"Investing is not just about money. It teaches you to think carefully. I enjoy the learning process."},
+        {what:"I recently started farming on weekends. I have a small plot of land near Yangji. I grow vegetables there.",
+         past:"I knew nothing about farming when I started. I killed my first batch of seedlings. I was embarrassed.",
+         now:"Now I can grow some basic vegetables. Peppers, lettuce, tomatoes. It feels so rewarding to eat what I grow.",
+         people:"My child loves visiting the farm. She calls it 'our secret garden.' It is a great family activity.",
+         end:"Farming taught me patience. You cannot rush nature. I apply that thinking to other parts of my life too."},
+        {what:"My hobby is running. I started about two years ago. I was not athletic at all before that.",
+         past:"The first time I ran, I could only go for 10 minutes. I was out of breath. My legs hurt for 3 days.",
+         now:"Now I can run for 40 minutes without stopping. I run three times a week early in the morning.",
+         people:"I joined a running club online. We share our times and encourage each other. It really helps me stay motivated.",
+         end:"Running changed my mindset. When something is hard at work, I think — I got through that tough run. I can do this too."}
+      ]
+    },
+    "My family members": {
+      details: [
+        {what:"My family has three members — me, my wife, and our child. Our child was born in 2022. She is the center of our world now.",
+         past:"Before our child was born, life was quieter. My wife and I had more free time. We could travel easily.",
+         now:"Now everything revolves around our daughter. It is tiring sometimes. But the love is indescribable.",
+         people:"My wife handles many things at home and also works. She is incredibly strong. I respect her so much.",
+         end:"Family is everything to me. I work hard every day because of them. They are my motivation."},
+        {what:"My parents live in a different city. I do not see them as often as I would like. But we call each other every week.",
+         past:"When I was young, I took my parents for granted. I did not realize how much they did for me.",
+         now:"Now I understand better. I try to visit them at least once a month. Time with family is precious.",
+         people:"My father is a quiet man. My mother talks a lot. Together they balance each other perfectly.",
+         end:"I want to be the kind of parent my parents were to me. Supportive, patient, and always there."}
+      ]
+    },
+    "My goals for this year": {
+      details: [
+        {what:"My biggest goal this year is to improve my English. I want to speak more naturally. Not just know the words, but really use them.",
+         past:"I studied English in school for many years. But I never got to practice speaking. It was all grammar and tests.",
+         now:"Now I use this app every day. I try to speak out loud. It feels awkward at first. But it gets easier.",
+         people:"My colleague speaks English very well. She lived abroad for a few years. I ask her for tips sometimes.",
+         end:"I believe small daily effort adds up. By the end of this year, I want to feel confident in English."},
+        {what:"One of my goals this year is to grow my business. I want to find 5 new clients. It is a challenging but realistic target.",
+         past:"Last year was tough in my industry. Prices were unstable. Some clients reduced their orders.",
+         now:"This year I am being more strategic. I am visiting more potential clients. I am building more relationships.",
+         people:"My boss supports my goals. He gives me the freedom to try new approaches. That trust means a lot.",
+         end:"Goals without action are just dreams. I remind myself of this every morning. Then I go to work."},
+        {what:"I want to spend more quality time with my family this year. Not just be physically present — really be there.",
+         past:"Last year I was very focused on work. I came home tired every day. I did not play enough with my child.",
+         now:"This year I try to put my phone away after dinner. We read books together. We go to the park on weekends.",
+         people:"My wife noticed the change right away. She said I seem less stressed. That made me happy.",
+         end:"Success at work means nothing if my family is not happy. Balance is my real goal this year."}
+      ]
+    }
+  };
+
+  // 기본 템플릿 (주제 데이터 없을 때 사용) — 더 다양하고 구체적으로
+  function getDefaultSections(topic) {
+    const angle = [
+      {intro: `Today I want to talk about ${topic.en.toLowerCase()}. This is something I think about quite often. Let me share my honest thoughts with you.`,
+       body1: `I first got interested in this topic a few years ago. At that time, I did not know much. But slowly I learned more and more.`,
+       body2: `When I was younger, I had a different view on this. As I got older, my thinking changed a lot. Experience taught me many things.`,
+       body3: `My family and friends have different opinions about this. Some agree with me. Some do not. But I respect all their views.`,
+       end: `To sum up, ${topic.en.toLowerCase()} is important to me. I hope to learn more about it. Thank you for listening.`},
+      {intro: `I am excited to talk about ${topic.en.toLowerCase()} today. It is something that comes up in my daily life. I have a lot to say about it.`,
+       body1: `The first thing I want to say is that it is not always easy. There are challenges. But the rewards are worth it.`,
+       body2: `Before, I did not pay much attention to this. Now I see it differently. A small change in thinking made a big difference.`,
+       body3: `I talked to a friend about this topic last week. She had a very interesting perspective. It made me think more deeply.`,
+       end: `I think everyone has their own way of looking at ${topic.en.toLowerCase()}. That is what makes it so interesting to discuss.`},
+      {intro: `Let me talk about ${topic.en.toLowerCase()}. Honestly, it is one of my favorite topics. I could talk about it for a long time.`,
+       body1: `What I find most interesting about this is the details. The small things matter a lot. Once you notice them, you see everything differently.`,
+       body2: `Five years ago, I had a different lifestyle. This was not really part of my life then. Now it is a regular part of my routine.`,
+       body3: `My wife and I sometimes disagree about this. That is okay. Disagreement can lead to good conversations.`,
+       end: `I am still learning about ${topic.en.toLowerCase()}. There is always more to discover. That is what keeps it exciting for me.`}
+    ];
+    const v = angle[Math.floor(Math.random() * angle.length)];
+    return [
+      {time:"0:00–0:30", tech:"🎯 인트로", en: v.intro, kr: `오늘은 ${topic.kr||topic.en}에 대해 이야기하려고 해요.`},
+      {time:"0:30–1:30", tech:"⭐ 구체적인 내용", en: v.body1, kr: `이 주제에 대한 제 생각을 구체적으로 말씀드릴게요.`},
+      {time:"1:30–2:30", tech:"⏳ 과거 vs 현재", en: v.body2, kr: `예전과 지금을 비교해보면 많이 달라졌어요.`},
+      {time:"2:30–4:30", tech:"👥 주변 사람들", en: v.body3, kr: `주변 사람들도 이에 대해 다양한 생각을 가지고 있어요.`},
+      {time:"4:30–5:00", tech:"💭 마무리", en: v.end, kr: `마무리하자면, 이 주제는 저에게 꽤 중요한 의미가 있어요.`}
+    ];
+  }
+
+  const topicData = TOPIC_DATA[t.en];
+  let sections;
+
+  if (topicData) {
+    const details = topicData.details;
+    const d = details[Math.floor(Math.random() * details.length)];
+    sections = [
+      {time:"0:00–0:30", tech:"🎯 인트로", en: `Today I want to talk about ${t.en.toLowerCase()}. ${d.what}`, kr:`오늘은 ${t.kr||t.en}에 대해 이야기할게요.`},
+      {time:"0:30–1:30", tech:"⭐ 구체적인 경험", en: d.what, kr:`이 주제에 대한 제 구체적인 경험을 말씀드릴게요.`},
+      {time:"1:30–2:30", tech:"⏳ 과거 vs 현재", en: `${d.past} ${d.now}`, kr:`예전엔 달랐지만, 지금은 많이 바뀌었어요.`},
+      {time:"2:30–4:30", tech:"👥 주변 사람들", en: d.people, kr:`주변 사람들 이야기도 해볼게요.`},
+      {time:"4:30–5:00", tech:"💭 마무리", en: d.end, kr:`마무리하자면, 이 주제는 저에게 정말 의미 있어요.`}
+    ];
+  } else {
+    sections = getDefaultSections(t);
+  }
+
+  const disp = document.getElementById('spkScriptDisplay');
+  disp.style.display='block';
+  disp.innerHTML = `
+    <div class="script-header">
+      <div class="script-title">📝 Script: "${t.en}"</div>
+      <div class="script-meta-btns">
+        <button class="script-meta-btn" onclick="speak(Array.from(document.querySelectorAll('.script-en-text')).map(e=>e.textContent).join(' '), this)">🔊 전체 읽기</button>
+        <button class="script-meta-btn stop" onclick="speechSynthesis.cancel();document.querySelectorAll('.tts-btn.speaking').forEach(b=>{b.classList.remove('speaking');b.textContent='🔊 듣기'})">⏹</button>
+        <button class="script-meta-btn" onclick="spkGenScript()">🔄 다른 버전</button>
+        <button class="script-meta-btn" onclick="document.getElementById('spkScriptDisplay').style.display='none'">✕</button>
+      </div>
+    </div>
+    ${sections.map(s=>`
+      <div class="script-section">
+        <div class="script-time">[${s.time}]</div>
+        <div class="script-tech">${s.tech}</div>
+        <div class="script-en-text">🇺🇸 ${s.en}</div>
+        <button class="tts-btn small" style="margin:4px 0 8px" onclick="speak(this.closest('.script-section').querySelector('.script-en-text').innerText.replace('🇺🇸 ',''), this)">🔊 영어 듣기</button>
+        <div class="script-kr-text">🇰🇷 ${s.kr}</div>
+      </div>`).join('')}`;
+  setTimeout(()=>disp.scrollIntoView({behavior:'smooth',block:'start'}),100);
+}
+
+// ════════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════════
+
+// ── 핵심 모바일 픽스 ──
+// iOS에서 position:fixed/overflow 레이아웃 안 버튼이 안 눌리는 문제 해결
+let _touchStartX = 0, _touchStartY = 0, _touchMoved = false;
+document.addEventListener('touchstart', function(e){
+  _touchStartX = e.touches[0].clientX;
+  _touchStartY = e.touches[0].clientY;
+  _touchMoved = false;
+}, {passive:true});
+
+document.addEventListener('touchmove', function(){
+  _touchMoved = true;
+}, {passive:true});
+
+document.addEventListener('touchend', function(e) {
+  if (_touchMoved) return; // 스크롤이면 무시
+  const dx = Math.abs(e.changedTouches[0].clientX - _touchStartX);
+  const dy = Math.abs(e.changedTouches[0].clientY - _touchStartY);
+  if (dx > 10 || dy > 10) return;
+  const el = e.target.closest('button, [onclick], .plan-card, .ch-card, .pat-day-item, .pat-hero, .pat-card, .topic-item, .filler-chip, .flash-inner, .nav-tab');
+  if (!el) return;
+  e.preventDefault(); // 300ms 딜레이 및 ghost click 차단
+  // setTimeout 0으로 네이티브 클릭과 순서 보장
+  setTimeout(() => el.click(), 0);
+}, {passive:false});
+
+// Ensure voices are loaded for TTS (needed on iOS)
+if ('speechSynthesis' in window) {
+  speechSynthesis.getVoices();
+  speechSynthesis.onvoiceschanged = () => { speechSynthesis.getVoices(); };
+}
+
+renderHome();
+</script>
+</body>
+</html>
